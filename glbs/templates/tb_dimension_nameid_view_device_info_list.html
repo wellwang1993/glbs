@@ -1,0 +1,11 @@
+{% load rest_framework %}
+<html><body>
+<h1>Profiles</h1>
+<h2>Person Form</h2>
+<form method="post" action="{% url 'testnameidlist' %}" >
+{% csrf_token %}
+    {% render_form serializer %}
+    <button type="submit">Save</button>
+    <a href="{% url 'testnameidlist' %}">Nevermind</a>
+ </form>
+</body></html>
