@@ -5,7 +5,7 @@ from django.db import models
 
 #存储dns类型的，id是自增主键,相当于是dns的类型
 class tb_fact_dnstype_info(models.Model):
-	dns_name = models.CharField(max_length = 256)
+	dns_name = models.CharField(max_length = 254,unique=True)
 	dns_status = models.CharField(max_length = 256)
 	dns_describe = models.CharField(max_length = 256)
 	def __str__(self):
@@ -22,7 +22,7 @@ class tb_fact_dnszone_info(models.Model):
         	return self.zone_name
 #存储nameid策略的,后续nameid在选择策略的时候必须从这里选择，支持default,fuse等策略
 class tb_fact_nameidpolicy_info(models.Model):
-	policy_name = models.CharField(max_length = 256)
+	policy_name = models.CharField(max_length = 254,unique=True)
 	policy_status = models.CharField(max_length = 256)
 	policy_describe = models.CharField(max_length = 256)
 	def __str__(self):
@@ -30,7 +30,7 @@ class tb_fact_nameidpolicy_info(models.Model):
 	
 #存储nameid的，zone_type作为外键,默认id作为主键
 class tb_fact_nameid_info(models.Model):
-	nameid_name = models.CharField(max_length = 256)
+	nameid_name = models.CharField(max_length = 254,unique=True)
 	zone_type = models.ForeignKey('tb_fact_dnszone_info',on_delete=models.CASCADE)
 	nameid_status = models.CharField(max_length = 256) 
 	nameid_policy = models.ForeignKey('tb_fact_nameidpolicy_info',on_delete=models.CASCADE)
