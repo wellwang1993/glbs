@@ -57,12 +57,13 @@ class tb_fact_view_info(models.Model):
 		return self.view_name
 #对设备的管理
 class tb_fact_device_info(models.Model):
-	node_id = models.IntegerField(default = 0)
-	vip_status = models.CharField(max_length = 256)
-	vip_address = models.CharField(max_length = 256)
-	vip_bandwidth = models.CharField(max_length = 256)
-	def __str__(self):
-		return self.vip_address
+        node_id = models.IntegerField(default = 0)
+        vip_status = models.CharField(max_length = 256)
+        vip_address = models.CharField(max_length = 256)
+        vip_bandwidth = models.CharField(max_length = 256)
+        vip_enable_switch = models.CharField(max_length = 256,default='enable')
+        def __str__(self):
+            return self.vip_address        
 
 class tb_fact_realdevice_info(models.Model):
 	ip_status = models.CharField(max_length = 256)
@@ -107,18 +108,22 @@ class tb_dimension_nameid_view_device_info(models.Model):
 	nameid_device_ratio = models.IntegerField(default = 1)
 	nameid_device_status = models.CharField(max_length = 256)
 	class Meta:
-		 unique_together = ('nameid_id','nameid_view_id','nameid_device_id')
+            ordering = ['id']
+            unique_together = ('nameid_id','nameid_view_id','nameid_device_id')
 	def __str__(self):
 		return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_device_id)
-
+#cname信息
+class tb_fact_cname_info(models.Model):
+        nameid_cname = models.CharField(max_length = 256)
+        nameid_owner = models.CharField(max_length = 256)
 #域名和view和cname的关系
 class tb_dimension_nameid_view_cname_info(models.Model):
 	nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
 	nameid_view_id = models.ForeignKey('tb_fact_view_info',on_delete=models.CASCADE)	
-	nameid_cname_name = models.CharField(max_length = 256)
+	nameid_cname_id = models.ForeignKey('tb_fact_cname_info',on_delete=models.CASCADE)
 	nameid_cname_ratio = models.IntegerField(default = 1)
 	nameid_cname_status = models.CharField(max_length = 256)
 	class Meta:
-		 unique_together = ('nameid_id','nameid_view_id','nameid_cname_name')
+		 unique_together = ('nameid_id','nameid_view_id','nameid_cname_id')
 	def __str__(self):
-		return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_cname_name)
+		return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_cname_id)

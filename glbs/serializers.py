@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from glbs.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info
+from glbs.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info
 class DnstypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnstype_info
@@ -65,4 +65,34 @@ class NameidViewSerializer(serializers.ModelSerializer):
 class NameidViewDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_device_info
-        fields = '__all__' 	
+        fields = '__all__' 
+
+#为内部使用的序列化接口，支持筛选nameid对应的view和设备信息
+class PartNameidSerializer(serializers.ModelSerializer):
+     class Meta:
+        model = tb_fact_nameid_info
+        fields = ['nameid_name']
+class PartVipDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_device_info
+        fields = ['vip_address']
+class PartViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_view_info
+        fields = ['view_id','view_name']
+class NameidViewDeviceListSerializer(serializers.ModelSerializer):
+    nameid_view_id = PartViewSerializer()
+    nameid_device_id = PartVipDeviceSerializer()
+    nameid_id = PartNameidSerializer()
+    class Meta:
+        model = tb_dimension_nameid_view_device_info
+        fields = ['nameid_id','nameid_view_id','nameid_device_id','nameid_device_ratio'] 
+
+class NameidCnameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_cname_info
+        fields = '__all__'
+class NameidViewCnameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_dimension_nameid_view_cname_info
+        fields = '__all__'	
