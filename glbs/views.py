@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
 
-from glbs.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewDeviceListSerializer
+from glbs.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer
 from glbs.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info
 from rest_framework import mixins
 from rest_framework import viewsets
@@ -173,7 +173,11 @@ class GetIdByNameidViewidDeviceid(mixins.ListModelMixin,viewsets.GenericViewSet)
         if nameid is not None and viewid is not None and deviceid is not None:
             queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid) & Q(nameid_device_id = deviceid))
         return queryset
-
+#通过域名id查找域名和设备信息
+class GetNameDevInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
+    queryset = tb_dimension_nameid_view_device_info.objects.all()
+    serializer_class = NameidViewDeviceListSerializer
+    lookup_field = 'nameid_id'
 #通过域名id删除所有项
 class DelDByNameid(mixins.DestroyModelMixin,viewsets.GenericViewSet):
     serializer_class = NameidViewDeviceSerializer
@@ -194,6 +198,20 @@ class DelDByNameid(mixins.DestroyModelMixin,viewsets.GenericViewSet):
 class CnameInfo(viewsets.ModelViewSet):
     serializer_class = NameidCnameSerializer
     queryset = tb_fact_cname_info.objects.all() 
+#支持按照操作员厂商以及业务的精准匹配
+class GetItemByOpSuBu(mixins.ListModelMixin,viewsets.GenericViewSet):
+    serializer_class = NameidCnameSerializer
+    def get_queryset(self):
+        operator = self.kwargs.get('operator', None)
+        supplier = self.kwargs.get('supplier', None)
+        bussiness = self.kwargs.get('bussiness', None)
+        if operator is not None and supplier is not None and bussiness is not None:
+            queryset = tb_fact_cname_info.objects.filter(Q(nameid_owner=operator) & Q(nameid_supplier=supplier) & Q(nameid_business=bussiness))
+        else:
+            queryset = tb_fact_cname_info.objects.all()           
+        return queryset
+#支持按照域名模糊匹配
+
 #对nameid view cname的管理
 class NameidViewCnameinfo(viewsets.ModelViewSet):
     serializer_class = NameidViewCnameSerializer
@@ -208,11 +226,20 @@ class GetCIdByNameidViewid(mixins.ListModelMixin,viewsets.GenericViewSet):
         if nameid is not None and viewid is not None:
             queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid))
         return queryset
-
-#通过域名查找配置的cname信息
-class GetCnameByname(mixins.ListModelMixin,viewsets.GenericViewSet):
-    queryset = tb_dimension_nameid_view_cname_info.objects.all()
+#通过域名 id.view id cname id查找对应的记录
+class GetCIdByNameidViewidCnameid(mixins.ListModelMixin,viewsets.GenericViewSet):
     serializer_class = NameidViewCnameSerializer
+    def get_queryset(self):
+        nameid = self.kwargs.get('nameid', None)
+        viewid = self.kwargs.get('viewid', None)
+        cnameid = self.kwargs.get('cnameid', None)
+        if nameid is not None and viewid is not None and cnameid is not None:
+            queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid) & Q(nameid_cname_id = cnameid))
+        return queryset
+#通过域名查找配置的cname信息
+class GetNameCnameInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
+    queryset = tb_dimension_nameid_view_cname_info.objects.all()
+    serializer_class = NameidViewCnameListSerializer
     lookup_field = 'nameid_id'
 '''
 class NameidList(generics.ListCreateAPIView):
@@ -315,10 +342,6 @@ class testnameid(viewsets.ModelViewSet):
     serializer_class = NameidViewSerializer
 '''
 
-class GetNameInfoByName(mixins.ListModelMixin,viewsets.GenericViewSet):
-    queryset = tb_dimension_nameid_view_device_info.objects.all()
-    serializer_class = NameidViewDeviceListSerializer
-    lookup_field = 'nameid_id'
 class testsss(viewsets.ModelViewSet):
     queryset = tb_dimension_nameid_view_device_info.objects.all() 
     serializer_class = NameidViewDeviceListSerializer

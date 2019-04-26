@@ -87,6 +87,18 @@ class NameidViewDeviceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_device_info
         fields = ['nameid_id','nameid_view_id','nameid_device_id','nameid_device_ratio'] 
+#为内部使用的序列化接口，支持筛选nameid对应的view和cname信息
+class PartNameidCnameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_cname_info
+        fields = ['nameid_cname']
+class NameidViewCnameListSerializer(serializers.ModelSerializer):
+    nameid_id = PartNameidSerializer()
+    nameid_view_id = PartViewSerializer()
+    nameid_cname_id = PartNameidCnameSerializer()
+    class Meta:
+        model = tb_dimension_nameid_view_cname_info
+        fields = ['nameid_id','nameid_view_id','nameid_cname_id','nameid_cname_ratio']
 
 class NameidCnameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -95,4 +107,4 @@ class NameidCnameSerializer(serializers.ModelSerializer):
 class NameidViewCnameSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_cname_info
-        fields = '__all__'	
+        fields = '__all__'

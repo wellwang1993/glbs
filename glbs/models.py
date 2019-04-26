@@ -62,6 +62,7 @@ class tb_fact_device_info(models.Model):
         vip_address = models.CharField(max_length = 256)
         vip_bandwidth = models.CharField(max_length = 256)
         vip_enable_switch = models.CharField(max_length = 256,default='enable')
+        node_isp = models.CharField(max_length = 256,default="0")
         def __str__(self):
             return self.vip_address        
 
@@ -116,6 +117,10 @@ class tb_dimension_nameid_view_device_info(models.Model):
 class tb_fact_cname_info(models.Model):
         nameid_cname = models.CharField(max_length = 256)
         nameid_owner = models.CharField(max_length = 256)
+        nameid_supplier = models.CharField(max_length = 256)
+        nameid_business = models.CharField(max_length = 256)
+        def __str__(self):
+            return self.nameid_cname
 #域名和view和cname的关系
 class tb_dimension_nameid_view_cname_info(models.Model):
 	nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
@@ -127,3 +132,6 @@ class tb_dimension_nameid_view_cname_info(models.Model):
 		 unique_together = ('nameid_id','nameid_view_id','nameid_cname_id')
 	def __str__(self):
 		return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_cname_id)
+
+#node和adminip的对应关系。用于设备探测
+class tb_fact_adminip

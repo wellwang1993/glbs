@@ -63,19 +63,21 @@ router.register(r'getdidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetDIdBy
 router.register(r'deldbynameid',views.DelDByNameid)
 #通过nameid,viewid,deviceid获取记录
 router.register(r'getidbynameviewdevice/(?P<nameid>.*)/(?P<viewid>.*)/(?P<deviceid>.*)',views.GetIdByNameidViewidDeviceid,base_name = 'nameidviewiddeviceid')
+#通过域名id获取name,device信息
+router.register(r'getnamedevinfo/(?P<sss>.*)',views.GetNameDevInfoByNameid)
 
 #对cname的管理
 router.register(r'cname',views.CnameInfo)
+router.register(r'getidbyopsubu/(?P<operator>.*)/(?P<supplier>.*)/(?P<bussiness>.*)',views.GetItemByOpSuBu,base_name = 'opsubu')
 #router.register(r'getidbycname/(?P<cname>.*)',views.GetIdByCname,base_name = 'cname')
-
 #对nameid view cname的管理
 router.register(r'nameidviewcname',views.NameidViewCnameinfo)
 router.register(r'getcidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetCIdByNameidViewid,base_name = 'cnameidview')
-#router.register(r'getcnamebynameid/(?P<sss>.*)',views.GetCnameByname)
+#通过nameid.viewid,cnameid查找记录
+router.register(r'getcidbynameviewcname/(?P<nameid>.*)/(?P<viewid>.*)/(?P<cnameid>.*)',views.GetCIdByNameidViewidCnameid,base_name = 'nameidviewidcnameid')
+router.register(r'getnamecnameinfo/(?P<sss>.*)',views.GetNameCnameInfoByNameid)
 
 
-
-router.register(r'getnameinfo/(?P<sss>.*)',views.GetNameInfoByName)
 router.register(r'tests',views.testsss)
 
 
