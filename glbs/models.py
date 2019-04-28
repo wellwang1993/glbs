@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import datetime
 from django.db import models
 
 #存储dns类型的，id是自增主键,相当于是dns的类型
@@ -134,4 +135,23 @@ class tb_dimension_nameid_view_cname_info(models.Model):
 		return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_cname_id)
 
 #node和adminip的对应关系。用于设备探测
-class tb_fact_adminip
+class tb_fact_adminip_info(models.Model):
+        node_id = models.IntegerField()
+        admin_ip = models.CharField(max_length = 256)
+        isp = models.CharField(max_length = 256)
+        region = models.CharField(max_length = 256)
+        province = models.CharField(max_length = 256)
+        status = models.CharField(max_length = 256,default = "disable")
+        def __str__(self):
+                return self.admin_ip
+#描述探测任务的
+class tb_fact_detecttask_info(models.Model):
+        detect_name = models.CharField(max_length = 256)
+        detect_frency = models.IntegerField()
+
+#上传探测的设备可用性数据的
+class tb_fact_detectdeviceavailability_info(models.Model):
+        admin_ip = models.CharField(max_length = 256)
+        vip_address  = models.CharField(max_length = 256)
+        availability = models.CharField(max_length = 256)
+        create_time = models.DateTimeField(auto_now = True)

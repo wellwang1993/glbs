@@ -78,11 +78,20 @@ router.register(r'getcidbynameviewcname/(?P<nameid>.*)/(?P<viewid>.*)/(?P<cnamei
 router.register(r'getnamecnameinfo/(?P<sss>.*)',views.GetNameCnameInfoByNameid)
 
 
+#对adminip的管理
+router.register('adminip',views.AdminIpInfo)
+#对探测任务的管理
+router.register('detecttask',views.DetectTaskInfo)
+
+#汇报数据可用性的接口
+router.register('putdeviceavailability',views.DetectDeviceAvailabilityInfo)
+
 router.register(r'tests',views.testsss)
 
 
 urlpatterns = [
    # path('ajax/GetRegion',views.GetRegion, name='ajax_GetRegion'),
+    path('gettask/',views.url_get_vipaddress_from_cache),
     path('', include(router.urls)),
 ]
 

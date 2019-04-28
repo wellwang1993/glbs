@@ -3,7 +3,9 @@ from glbs.models import tb_fact_nameid_info
 
 from glbs.utils.download import urllib_get
 from glbs.policy.detect_device_availability_policy import detect_device_availability
-from glbs.sync.load_device_availability_cache import load_device_availability_cache
+from glbs.detect.vipdevice_availability_data import load_device_availability_cache
+from glbs.detect.vipdevice_availability_data import load_detect_vipdevice_cache
+from glbs.detect.vipdevice_availability_data import load_device_switch_cache
 
 #from glbs.config import config.conf
 
@@ -97,5 +99,15 @@ def update_nameid_from_disablepolciy():
 def load_extradata_device_availability():
     load_device_availability_cache() 
 
+
+#定时加载探测外部数据
+@register_job(scheduler, "interval", seconds=10)
+def load_extradata_device_detect():
+    load_detect_vipdevice_cache()
+
+#定时加载设备开关
+@register_job(scheduler, "interval", seconds=10)
+def load_extradata_device_switch():
+    load_device_switch_cache()
 
 register_events(scheduler)

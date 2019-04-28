@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
 
-from glbs.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer
-from glbs.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info
+from glbs.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer,AdminIpSerializer,DetectTaskSerializer,DetectDeviceAvailabilitySerializer
+from glbs.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info
 from rest_framework import mixins
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -241,6 +241,16 @@ class GetNameCnameInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
     queryset = tb_dimension_nameid_view_cname_info.objects.all()
     serializer_class = NameidViewCnameListSerializer
     lookup_field = 'nameid_id'
+
+#对adminip的管理
+class AdminIpInfo(viewsets.ModelViewSet):
+    queryset = tb_fact_adminip_info.objects.all()
+    serializer_class = AdminIpSerializer
+#对探测任务的管理
+class DetectTaskInfo(viewsets.ModelViewSet):
+    queryset = tb_fact_detecttask_info.objects.all()
+    serializer_class = DetectTaskSerializer 
+
 '''
 class NameidList(generics.ListCreateAPIView):
     queryset = tb_fact_nameid_info.objects.all()
@@ -346,3 +356,14 @@ class testsss(viewsets.ModelViewSet):
     queryset = tb_dimension_nameid_view_device_info.objects.all() 
     serializer_class = NameidViewDeviceListSerializer
 
+#上传设备可用性的源数据
+class DetectDeviceAvailabilityInfo(viewsets.ModelViewSet):
+    queryset = tb_fact_detectdeviceavailability_info.objects.all()
+    serializer_class = DetectDeviceAvailabilitySerializer 
+
+
+from django.http import HttpResponse
+from glbs.detect.get_vipaddress_from_cache import get_vipaddress_from_cache
+def url_get_vipaddress_from_cache(request):
+    addr = request.GET.get('address','')
+    return HttpResponse(get_vipaddress_from_cache(addr))

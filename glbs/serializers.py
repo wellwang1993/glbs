@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from glbs.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info
+from glbs.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info
 class DnstypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnstype_info
@@ -108,3 +108,17 @@ class NameidViewCnameSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_cname_info
         fields = '__all__'
+
+#node和admin的对应关系
+class AdminIpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_adminip_info
+        fields = '__all__'
+class DetectTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_detecttask_info
+        fields = '__all__'
+class DetectDeviceAvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_detectdeviceavailability_info
+        fields = '__all__' 
