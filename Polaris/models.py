@@ -65,10 +65,12 @@ class tb_fact_device_info(models.Model):
         node_isp = models.CharField(max_length = 256,default="0")
         def __str__(self):
             return self.vip_address        
+'''
 class tb_temp_device_info(models.Model):
         vip_address = models.CharField(max_length = 250,unique=True)
         def __str__(self):
             return self.vip_address        
+'''
 class tb_fact_realdevice_info(models.Model):
 	ip_status = models.CharField(max_length = 256)
 	ip_address = models.CharField(max_length = 256)
@@ -108,8 +110,8 @@ class tb_dimension_nameid_view_info(models.Model):
 class tb_dimension_nameid_view_device_info(models.Model):
 	nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
 	nameid_view_id = models.ForeignKey('tb_fact_view_info',on_delete=models.CASCADE)	
-	nameid_device_id = models.ForeignKey('tb_temp_device_info',on_delete=models.CASCADE)
-#	nameid_device_id = models.ForeignKey('tb_fact_device_info',on_delete=models.CASCADE)
+#	nameid_device_id = models.ForeignKey('tb_temp_device_info',on_delete=models.CASCADE)
+	nameid_device_id = models.ForeignKey('tb_fact_device_info',on_delete=models.CASCADE)
 	nameid_device_ratio = models.IntegerField(default = 1)
 	nameid_device_status = models.CharField(max_length = 256)
 	class Meta:

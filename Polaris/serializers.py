@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from Polaris.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_temp_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info
+from Polaris.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info
 class DnstypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnstype_info
@@ -52,12 +52,12 @@ class VipDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_device_info
         fields = '__all__'
-
+'''
 class VipDeviceTempSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_temp_device_info
         fields = '__all__'
-
+'''
 class ViewtoNamiedSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_view_info

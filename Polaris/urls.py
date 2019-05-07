@@ -15,9 +15,7 @@ router.register(r'nameidpolicy',views.NameidPolciyinfo)
 router.register(r'getidbypolicyname/(?P<policyname>.*)',views.GetIdByPolicy,base_name = 'policyname')
 
 router.register(r'vipdevice',views.VipDeviceinfo)
-router.register(r'vipdevicetemp',views.VipDeviceTempinfo)
 router.register(r'getidbyvipname/(?P<vipname>.*)',views.GetIdByVipdev,base_name = 'vipname')
-router.register(r'getidbyvipnametemp/(?P<vipname>.*)',views.GetIdByVipdevTemp,base_name = 'vipname')
 
 #对view的信息管理
 router.register(r'viewtype',views.Viewtypeinfo)

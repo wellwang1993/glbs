@@ -24,7 +24,7 @@ scheduler.add_jobstore(DjangoJobStore(), "default")
 
 
 import logging
-logger = logging.getLogger('dj')
+logger = logging.getLogger('init')
 import json
 
 def serialize_instance(obj):
@@ -41,10 +41,10 @@ def load_data(url):
         return
     datastr = str(data,encoding = "utf8")
     obj = json.loads(datastr)
-    logger.info(data)
     return obj
-@register_job(scheduler, "interval", seconds=20,replace_existing=True,misfire_grace_time=30,coalesce=True)
+@register_job(scheduler, "interval",seconds=20,replace_existing=True,misfire_grace_time=30,coalesce=True)
 def load_confignameid_from_table():
+    logger.info("start to init nameid")
     objs = tb_fact_nameid_info.objects.all()
     for obj in objs:
         if obj.nameid_name is not None and obj.nameid_policy is not None and obj.nameid_status == 'enable':
@@ -58,7 +58,7 @@ def load_confignameid_from_table():
             for item in obj_list:
                 viewobj = ViewClass().genobj(item)
                 nameid_view_dict[item["nameid_view_id"]] = viewobj
-            logger.info(json.dumps(nameid_view_dict,default=serialize_instance))
+            logger.info("the nameid is {}.the view is {}".format(obj.nameid_name,json.dumps(nameid_view_dict,default=serialize_instance)))
             #这个是获取所有view和device信息的，是通过 diomension_view_device表中取得的，这里会有详细的nameid_name,device_name，也有view_id,这里会用上面的view_id进行替换。形成最终的信息。
             url = "{}/{}/".format("http://10.224.10.63:8000/getnamedevinfo/",obj.id)
             nameid_device_data = load_data(url)
@@ -66,19 +66,15 @@ def load_confignameid_from_table():
             if nameid_device_data != None and nameid_device_data.get("results") != None and len(nameid_device_data["results"]) != 0:
                 obj_list = nameid_device_data["results"]
                 nameid_name = nameidobj.genobj(obj_list,nameid_view_dict)
-                logger.info(json.dumps(nameidobj.nameid_data_dict,default=serialize_instance))   
-                logger.info(nameid_name)
             #这个是获取所有view和cname信息的，是通过dimension_view_cname表中取得的，这里会有详细的cname信息，同样是去填充上面的类中的cname信息。
             url = "{}/{}/".format("http://10.224.10.63:8000/getnamecnameinfo/",obj.id)
             nameid_cname_data = load_data(url)
             if nameid_cname_data != None and nameid_cname_data.get("results") != None and len(nameid_cname_data["results"]) !=0:
                 obj_list = nameid_cname_data["results"]
                 nameid_name = nameidobj.genobj(obj_list,nameid_view_dict)
-                logger.info("{}222222222222{}".format(nameid_name,json.dumps(nameidobj.nameid_data_dict,default=serialize_instance)))
-                logger.info(nameid_name)
             #最终nameidobj中存储的就是配置的view和每个view中对应的设备或者cname信息。后面的都是基于此来做解析的。会以nameid_name为key,它的元信息为value存入到cache中
-            write_to_cache_cluster("vipdevice","nameid-default",nameid_name,json.dumps(nameidobj.nameid_data_dict,default=serialize_instance))
-    
+            write_to_cache_cluster("vipdevice","nameid-manual",obj.nameid_name,json.dumps(nameidobj.nameid_data_dict,default=serialize_instance))
+            logger.info("the nameid is {},the config is {}".format(obj.nameid_name,json.dumps(nameidobj.nameid_data_dict,default=serialize_instance))) 
             default_nameidobj = NameidClass()
 #            default_nameidobj.gen_default(nameidobj)
 #            logger.info(json.dumps(default_nameidobj.nameid_data_dict,default=serialize_instance))
@@ -87,27 +83,30 @@ def load_confignameid_from_table():
 #            logger.info("read from cache!!!!!!!!!!!!!")
 #            logger.info(read_from_cache(nameid_name))
 #设备可用性策略
-@register_job(scheduler, "interval", seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
+@register_job(scheduler, "interval",seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
 def update_nameid_from_disablepolciy():
+    logger.info("start to execute  nameid policy")
     objs = tb_fact_nameid_info.objects.all()
     for obj in objs:
         if obj.nameid_name is not None and obj.nameid_policy is not None and obj.nameid_status == 'enable':
-            detect_device_availability(obj.id)
-#        load_config(obj.id)
+            if obj.nameid_policy == "policy-deviceavl":
+                pass
+            detect_device_availability(obj.nameid_name,"nameid-manual")
+            detect_device_availability(obj.nameid_name,"nameid-default")
 
 #定时加载系统外部数据
-@register_job(scheduler, "interval", seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
+@register_job(scheduler, "interval",seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
 def load_extradata_device_availability():
     load_device_availability_cache() 
 
 
 #定时加载探测外部数据
-@register_job(scheduler, "interval", seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
+@register_job(scheduler, "interval",seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
 def load_extradata_device_detect():
     load_detect_vipdevice_cache()
 
 #定时加载设备开关
-@register_job(scheduler, "interval", seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
+@register_job(scheduler, "interval",seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
 def load_extradata_device_switch():
     load_device_switch_cache()
 

@@ -6,8 +6,8 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
-from Polaris.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer,AdminIpSerializer,DetectTaskSerializer,DetectDeviceAvailabilitySerializer,VipDeviceTempSerializer,DetectDeviceAvailabilityStandardSerializer
-from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_temp_device_info,tb_fact_detectdeviceavailability_standard_info
+from Polaris.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer,AdminIpSerializer,DetectTaskSerializer,DetectDeviceAvailabilitySerializer,DetectDeviceAvailabilityStandardSerializer
+from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info
 from rest_framework import mixins
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -65,18 +65,6 @@ class GetIdByPolicy(viewsets.ModelViewSet):
 class VipDeviceinfo(viewsets.ModelViewSet):
     queryset = tb_fact_device_info.objects.all()
     serializer_class = VipDeviceSerializer
-#对临时表的增删改查
-class VipDeviceTempinfo(viewsets.ModelViewSet):
-    queryset = tb_temp_device_info.objects.all()
-    serializer_class = VipDeviceTempSerializer
-#根据设备名字查找临时表中设备对应的id
-class GetIdByVipdevTemp(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = VipDeviceTempSerializer
-    def get_queryset(self):
-        obj = self.kwargs.get('vipname', None)
-        if obj is not None:
-            queryset = tb_temp_device_info.objects.filter(vip_address = obj)
-        return queryset
 
 #根据设备名字查找设备对应的id
 class GetIdByVipdev(mixins.ListModelMixin,viewsets.GenericViewSet):

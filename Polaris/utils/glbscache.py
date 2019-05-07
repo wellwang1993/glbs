@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.core.cache import cache
 from django_redis import get_redis_connection
-
+import logging
+logger = logging.getLogger('djs')
+import json
 
 import json
 #read cache user id
@@ -24,6 +26,10 @@ def read_from_cache_cluster(con,cluster,key):
     #conn = get_redis_connection(con)
     conn = get_redis_connection("default")
     val = conn.hget(cluster,key) 
+    logger.info("@@@@@@@@@@@@@@@@@@@@")
+    logger.info(conn.hkeys(cluster))
+    logger.info(conn.hvals(cluster))
+    logger.info(val)
     if val:
         return str(val,encoding = "utf8")
     return None
@@ -31,8 +37,12 @@ def write_to_cache_cluster(con,cluster,key,value):
     if key == None or cluster == None or con == None or value == None:
         return None
     conn = get_redis_connection("default")
-    conn.expire("cluster",10)
     conn.hset(cluster,key,value)
-   # conn = get_redis_connection(con)
+    # conn = get_redis_connection(con)
    # conn.set(cluster,key,value,None)
     return 1
+def delete_to_cache_cluster(con,cluster,key):
+    if key == None or cluster == None or con == None:
+        return None
+    conn = get_redis_connection("default")
+    conn.hdel(cluster,key)
