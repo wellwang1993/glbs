@@ -34,6 +34,7 @@ router.register(r'getidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetIdByNa
 router.register(r'delbynameid',views.DelByNameid)
 router.register(r'getitembynameid_inner/(?P<sss>.*)',views.GetItemBynameid_inner)
 
+
 #对nameid view device的管理
 router.register(r'nameidviewdevice',views.NameidViewDeviceinfo)
 router.register(r'getdidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetDIdByNameidViewid,base_name = 'dnameidview')
@@ -70,6 +71,7 @@ urlpatterns = [
    # path('ajax/GetRegion',views.GetRegion, name='ajax_GetRegion'),
     path('gettask/',views.url_get_vipaddress_from_cache),
     path('getnameid/',views.url_get_nameid_from_cache),
+#    path('leadgeo/',views.url_leading_geoip_cache),
     path('', include(router.urls)),
 ]
 from Polaris.init.gslb_init import scheduler

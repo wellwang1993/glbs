@@ -42,7 +42,7 @@ def load_data(url):
     datastr = str(data,encoding = "utf8")
     obj = json.loads(datastr)
     return obj
-@register_job(scheduler, "interval",seconds=20,replace_existing=True,misfire_grace_time=30,coalesce=True)
+@register_job(scheduler, "interval",seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
 def load_confignameid_from_table():
     logger.info("start to init nameid")
     objs = tb_fact_nameid_info.objects.all()
@@ -75,9 +75,10 @@ def load_confignameid_from_table():
             #最终nameidobj中存储的就是配置的view和每个view中对应的设备或者cname信息。后面的都是基于此来做解析的。会以nameid_name为key,它的元信息为value存入到cache中
             write_to_cache_cluster("vipdevice","nameid-manual",obj.nameid_name,json.dumps(nameidobj.nameid_data_dict,default=serialize_instance))
             logger.info("the nameid is {},the config is {}".format(obj.nameid_name,json.dumps(nameidobj.nameid_data_dict,default=serialize_instance))) 
-            default_nameidobj = NameidClass()
-#            default_nameidobj.gen_default(nameidobj)
-#            logger.info(json.dumps(default_nameidobj.nameid_data_dict,default=serialize_instance))
+            #default_nameidobj = NameidClass()
+            status = nameidobj.gen_default()
+            write_to_cache_cluster("vipdevice","nameid-default",obj.nameid_name,json.dumps(nameidobj.default_dict))
+            logger.info(json.dumps(nameidobj.default_dict,default=serialize_instance))
 #            logger.info(nameidobj)
 #            write_to_cache(nameid_name,nameidobj)
 #            logger.info("read from cache!!!!!!!!!!!!!")
@@ -88,11 +89,11 @@ def update_nameid_from_disablepolciy():
     logger.info("start to execute  nameid policy")
     objs = tb_fact_nameid_info.objects.all()
     for obj in objs:
-        if obj.nameid_name is not None and obj.nameid_policy is not None and obj.nameid_status == 'enable':
+        if obj.nameid_name is not None and obj.nameid_policy is not None:
             if obj.nameid_policy == "policy-deviceavl":
                 pass
-            detect_device_availability(obj.nameid_name,"nameid-manual")
-            detect_device_availability(obj.nameid_name,"nameid-default")
+            detect_device_availability(obj.nameid_name,"nameid-manual",obj.nameid_status)
+            detect_device_availability(obj.nameid_name,"nameid-default",obj.nameid_status)
 
 #定时加载系统外部数据
 @register_job(scheduler, "interval",seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)

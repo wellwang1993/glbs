@@ -327,3 +327,11 @@ def url_get_nameid_from_cache(request):
 class DetectDeviceAvailabilityStandardInfo(viewsets.ModelViewSet):
     queryset = tb_fact_detectdeviceavailability_standard_info.objects.all()
     serializer_class = DetectDeviceAvailabilityStandardSerializer
+'''
+#导入原始geoip文件的
+from Polaris.Geoip.leading_ori_geoip_info import leading_ori_geoip_info
+def url_leading_geoip_cache(request):
+    leading_ori_geoip_info()
+    return HttpResponse("leading ok...")
+'''
+

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from Polaris.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info
+from Polaris.models import tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_dnszone_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info,tb_fact_temp_view_info
 class DnstypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnstype_info
@@ -46,7 +46,7 @@ class ViewtypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 class ViewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = tb_fact_view_info
+        model = tb_fact_temp_view_info
         fields = '__all__'
 class VipDeviceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,8 +60,8 @@ class VipDeviceTempSerializer(serializers.ModelSerializer):
 '''
 class ViewtoNamiedSerializer(serializers.ModelSerializer):
     class Meta:
-        model = tb_fact_view_info
-        fields = ['view_name']
+        model = tb_fact_temp_view_info
+        fields = ['view_country','view_isp','view_region','view_province','view_city']
 class NameidViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_info
@@ -81,8 +81,8 @@ class PartVipDeviceSerializer(serializers.ModelSerializer):
         fields = ['vip_address']
 class PartViewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = tb_fact_view_info
-        fields = ['view_id','view_name']
+        model = tb_fact_temp_view_info
+        fields = ['id','view_country','view_isp','view_region','view_province','view_city']
 class NameidViewDeviceListSerializer(serializers.ModelSerializer):
     nameid_view_id = PartViewSerializer()
     nameid_device_id = PartVipDeviceSerializer()
@@ -128,3 +128,5 @@ class DetectDeviceAvailabilityStandardSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_detectdeviceavailability_standard_info
         fields = '__all__'
+
+

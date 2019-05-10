@@ -8,13 +8,16 @@ import json
 
 
 
-def detect_device_availability(nameid,multiple_config):
+def detect_device_availability(nameid,multiple_config,status):
     qdns_res = {}
     qdns_res_del = {}
 
     if multiple_config != "nameid-default" and multiple_config != "nameid-manual":
         return            
     nameid_obj = read_from_cache_cluster("vipdevice",multiple_config,nameid)
+    if status != "enable":
+        delete_to_cache_cluster("vipdevice",nameid)
+        return        
     if nameid_obj != None:
         nameid_obj = json.loads(nameid_obj)
         nameid_obj_replace = {}
@@ -50,10 +53,12 @@ def detect_device_availability(nameid,multiple_config):
                     qdns_res_del[id][nameid] = ""
     for dnstype,nameidinfo in qdns_res.items():
         logger.info("the dnstype is {},the nameid info is {}".format(dnstype,json.dumps(nameidinfo)))
-        write_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype),json.dumps(nameidinfo))
+        if multiple_config == "nameid-manual":
+            write_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype),json.dumps(nameidinfo))
     for dnstype,nameidinfo in qdns_res_del.items():
         logger.info("the dnstype is {},del all nameid {}".format(dnstype,json.dumps(nameidinfo)))
-        delete_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype)) 
+        if multiple_config == "nameid-manual":
+            delete_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype)) 
 
 def sdetect_device_availability(id):
     qdns_res = {}
@@ -105,7 +110,9 @@ def sdetect_device_availability(id):
     for dnstype,nameidinfo in qdns_res.items():
         logger.info("sssssssssssssspppppppppp")
         logger.info("{}++++++++++++++++++++{}".format(type(str(dnstype)),json.dumps(nameidinfo)))
-        write_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype),json.dumps(nameidinfo))
+        if multiple_config == "nameid-manual": 
+            write_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype),json.dumps(nameidinfo))
     for dnstype,nameidinfo in qdns_res_del.items():
         logger.info("{}____________{}__________{}".format("del",dnstype,json.dumps(nameidinfo)))
-        delete_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype)) 
+        if multiple_config == "nameid-manual": 
+            delete_to_cache_cluster("vipdevice","policy-device-availability",str(dnstype)) 

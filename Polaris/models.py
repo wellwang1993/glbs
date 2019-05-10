@@ -44,6 +44,21 @@ class tb_fact_viewtype_info(models.Model):
 	view_describe = models.CharField(max_length = 256)
 	def __str__(self):
         	return self.view_type
+#对view的管理
+class tb_fact_temp_view_info(models.Model):
+    view_father_id = models.IntegerField(default = 0)
+    view_default = models.CharField(max_length = 256,default='*')
+    view_country = models.CharField(max_length = 256,default='*')
+    view_isp = models.CharField(max_length = 256,default='*')
+    view_region = models.CharField(max_length = 256,default='*')
+    view_province = models.CharField(max_length = 256,default='*')
+    view_city = models.CharField(max_length = 256,default='*')
+    view_grade_name = models.CharField(max_length = 256,default='*')
+    view_grade = models.IntegerField(default = 0)
+    view_father_grade = models.IntegerField(default = 0)
+    view_type = models.ForeignKey('tb_fact_viewtype_info',on_delete=models.CASCADE)
+    def __str__(self):
+        return "{}-{}-{}-{}-{}-{}".format(self.view_country,self.view_isp,self.view_region,self.view_province,self.view_city,self.view_grade_name)
 class tb_fact_view_info(models.Model):
 	view_id = models.IntegerField(default = 0,primary_key=True)
 	view_father_id = models.IntegerField(default = 0)
@@ -85,6 +100,7 @@ class tb_dimension_device_info(models.Model):
 		return self.vip_address
 #对服务的管理
 #域名和 view的关系
+
 class tb_dimension_nameid_view_info(models.Model):
 	resolve_type_choice = (
 	('cname','cname'),
@@ -96,7 +112,7 @@ class tb_dimension_nameid_view_info(models.Model):
 	('ratio','ratio'),
 	)
 	nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
-	nameid_view_id = models.ForeignKey('tb_fact_view_info',on_delete=models.CASCADE)
+	nameid_view_id = models.ForeignKey('tb_fact_temp_view_info',on_delete=models.CASCADE)
 	nameid_resolve_type = models.CharField(max_length=10,choices=resolve_type_choice,default='a')
 	nameid_max_ip = models.IntegerField(default = 1)
 	nameid_preferred = models.CharField(max_length=10,choices=preferred_type_choice,default="rr")
@@ -109,7 +125,7 @@ class tb_dimension_nameid_view_info(models.Model):
 #域名和view和设备的关系
 class tb_dimension_nameid_view_device_info(models.Model):
 	nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
-	nameid_view_id = models.ForeignKey('tb_fact_view_info',on_delete=models.CASCADE)	
+	nameid_view_id = models.ForeignKey('tb_fact_temp_view_info',on_delete=models.CASCADE)	
 #	nameid_device_id = models.ForeignKey('tb_temp_device_info',on_delete=models.CASCADE)
 	nameid_device_id = models.ForeignKey('tb_fact_device_info',on_delete=models.CASCADE)
 	nameid_device_ratio = models.IntegerField(default = 1)
@@ -167,3 +183,30 @@ class tb_fact_detectdeviceavailability_standard_info(models.Model):
         total_value = models.IntegerField()
         absolute_value = models.IntegerField()
         relative_rate = models.FloatField(default=0.0)
+#对geoip库原始数据的录入
+class tb_fact_ori_view_info(models.Model):
+        start_address = models.CharField(max_length = 256)
+        end_address = models.CharField(max_length = 256)
+        country = models.CharField(max_length = 256)
+        region = models.CharField(max_length = 256,default='0')
+        province = models.CharField(max_length = 256)
+        city = models.CharField(max_length = 256)
+        unknow_a = models.CharField(max_length = 30,default="0")
+        isp = models.CharField(max_length = 256)
+        unknow_b = models.CharField(max_length = 30,default="0")
+        unknow_c = models.CharField(max_length = 30,default="0")
+        unknow_d = models.CharField(max_length = 30,default="0")
+        unknow_e = models.CharField(max_length = 30,default="0")
+        unknow_f = models.CharField(max_length = 30,default="0")
+        unknow_g = models.CharField(max_length = 30,default="0")
+        unknow_h = models.CharField(max_length = 30,default="0")
+        unknow_i = models.CharField(max_length = 30,default="0")
+        unknow_j = models.CharField(max_length = 30,default="0")
+        unknow_k = models.CharField(max_length = 30,default="0")
+        unknow_l = models.CharField(max_length = 30,default="0")
+        unknow_m = models.CharField(max_length = 30,default="0")
+#对地址库的管理
+class tb_fact_ipset_info(models.Model):
+        view_id = models.ForeignKey('tb_fact_temp_view_info',on_delete=models.CASCADE) 
+        start_address = models.CharField(max_length = 256)
+        end_address = models.CharField(max_length = 256)
