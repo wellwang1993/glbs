@@ -143,10 +143,14 @@ class DelByNameid(mixins.DestroyModelMixin,viewsets.GenericViewSet):
 
 #支持通过域名id查找 item
 class GetItemBynameid_inner(mixins.ListModelMixin,viewsets.GenericViewSet):
-    queryset = tb_dimension_nameid_view_info.objects.all()
+   # queryset = tb_dimension_nameid_view_info.objects.all()
     serializer_class = NameidViewSerializer
-    lookup_field = 'nameid_id' 
-
+   # lookup_field = 'nameid_id' 
+    def get_queryset(self):
+        nameid = self.kwargs.get('nameid', None)
+        if nameid is not None:
+            queryset = tb_dimension_nameid_view_info.objects.filter(Q(nameid_id = nameid))
+        return queryset
 
 #对域名view,设备之间的管理
 class NameidViewDeviceinfo(viewsets.ModelViewSet):
@@ -173,9 +177,13 @@ class GetIdByNameidViewidDeviceid(mixins.ListModelMixin,viewsets.GenericViewSet)
         return queryset
 #通过域名id查找域名和设备信息
 class GetNameDevInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    queryset = tb_dimension_nameid_view_device_info.objects.all()
+#    queryset = tb_dimension_nameid_view_device_info.objects.all()
     serializer_class = NameidViewDeviceListSerializer
-    lookup_field = 'nameid_id'
+    def get_queryset(self):
+        nameid = self.kwargs.get('nameid', None)
+        if nameid is not None:
+            queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid))
+        return queryset
 #通过域名id删除所有项
 class DelDByNameid(mixins.DestroyModelMixin,viewsets.GenericViewSet):
     serializer_class = NameidViewDeviceSerializer
@@ -236,9 +244,14 @@ class GetCIdByNameidViewidCnameid(mixins.ListModelMixin,viewsets.GenericViewSet)
         return queryset
 #通过域名查找配置的cname信息
 class GetNameCnameInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    queryset = tb_dimension_nameid_view_cname_info.objects.all()
+    #queryset = tb_dimension_nameid_view_cname_info.objects.all()
     serializer_class = NameidViewCnameListSerializer
-    lookup_field = 'nameid_id'
+    #lookup_field = 'nameid_id'
+    def get_queryset(self):
+        nameid = self.kwargs.get('nameid', None)
+        if nameid is not None:
+            queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid))
+        return queryset
 
 #对adminip的管理
 class AdminIpInfo(viewsets.ModelViewSet):
@@ -323,7 +336,11 @@ from Polaris.qdns.get_nameid_from_cache import get_nameid_from_cache
 def url_get_nameid_from_cache(request):
     dnstype = request.GET.get('dnstype','')
     return HttpResponse(get_nameid_from_cache(dnstype))
-
+#获取权威dns对应的zone文件
+from Polaris.qdns.get_zone_from_cache import get_zone_from_cache
+def url_get_zone_from_cache(request):
+    dnstype = request.GET.get('dnstype','')
+    return HttpResponse(get_zone_from_cache(dnstype))
 class DetectDeviceAvailabilityStandardInfo(viewsets.ModelViewSet):
     queryset = tb_fact_detectdeviceavailability_standard_info.objects.all()
     serializer_class = DetectDeviceAvailabilityStandardSerializer

@@ -35,6 +35,7 @@ class NameidListSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_nameid_info
         fields = '__all__'
+
 class NameidUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_nameid_info

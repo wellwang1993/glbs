@@ -146,7 +146,7 @@ class tb_fact_cname_info(models.Model):
 #域名和view和cname的关系
 class tb_dimension_nameid_view_cname_info(models.Model):
 	nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
-	nameid_view_id = models.ForeignKey('tb_fact_view_info',on_delete=models.CASCADE)	
+	nameid_view_id = models.ForeignKey('tb_fact_temp_view_info',on_delete=models.CASCADE)	
 	nameid_cname_id = models.ForeignKey('tb_fact_cname_info',on_delete=models.CASCADE)
 	nameid_cname_ratio = models.IntegerField(default = 1)
 	nameid_cname_status = models.CharField(max_length = 256)

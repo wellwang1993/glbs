@@ -27,12 +27,11 @@ router.register(r'nameid', views.Nameidinfo)
 #通过域名获取域名id
 router.register(r'getidbyname/(?P<nameid>.*)',views.NameidGetByName,base_name='nameid')
 
-
 #对nameid view的管理
 router.register(r'nameidview',views.NameidViewinfo)
 router.register(r'getidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetIdByNameidViewid,base_name = 'nameidview')
 router.register(r'delbynameid',views.DelByNameid)
-router.register(r'getitembynameid_inner/(?P<sss>.*)',views.GetItemBynameid_inner)
+router.register(r'getitembynameid_inner/(?P<nameid>.*)',views.GetItemBynameid_inner,base_name='nameidviewinner')
 
 
 #对nameid view device的管理
@@ -42,7 +41,8 @@ router.register(r'deldbynameid',views.DelDByNameid)
 #通过nameid,viewid,deviceid获取记录
 router.register(r'getidbynameviewdevice/(?P<nameid>.*)/(?P<viewid>.*)/(?P<deviceid>.*)',views.GetIdByNameidViewidDeviceid,base_name = 'nameidviewiddeviceid')
 #通过域名id获取name,device信息
-router.register(r'getnamedevinfo/(?P<sss>.*)',views.GetNameDevInfoByNameid)
+router.register(r'getnamedevinfo/(?P<nameid>.*)',views.GetNameDevInfoByNameid,base_name='nameid')
+#router.register(r'getnamedevinfo',views.GetNameDevInfoByNameid)
 
 #对cname的管理
 router.register(r'cname',views.CnameInfo)
@@ -53,7 +53,7 @@ router.register(r'nameidviewcname',views.NameidViewCnameinfo)
 router.register(r'getcidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetCIdByNameidViewid,base_name = 'cnameidview')
 #通过nameid.viewid,cnameid查找记录
 router.register(r'getcidbynameviewcname/(?P<nameid>.*)/(?P<viewid>.*)/(?P<cnameid>.*)',views.GetCIdByNameidViewidCnameid,base_name = 'nameidviewidcnameid')
-router.register(r'getnamecnameinfo/(?P<sss>.*)',views.GetNameCnameInfoByNameid)
+router.register(r'getnamecnameinfo/(?P<nameid>.*)',views.GetNameCnameInfoByNameid,base_name='nameidcname')
 
 
 #对adminip的管理
@@ -71,6 +71,7 @@ urlpatterns = [
    # path('ajax/GetRegion',views.GetRegion, name='ajax_GetRegion'),
     path('gettask/',views.url_get_vipaddress_from_cache),
     path('getnameid/',views.url_get_nameid_from_cache),
+    path('getzone/',views.url_get_zone_from_cache),
 #    path('leadgeo/',views.url_leading_geoip_cache),
     path('', include(router.urls)),
 ]

@@ -46,3 +46,7 @@ def delete_to_cache_cluster(con,cluster,key):
         return None
     conn = get_redis_connection("default")
     conn.hdel(cluster,key)
+
+def flushall_to_cache_cluster(con,cluster):
+    conn = get_redis_connection("default")
+    conn.flushall(cluster)
