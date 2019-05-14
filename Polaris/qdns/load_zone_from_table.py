@@ -1,12 +1,14 @@
+
 from Polaris.utils.glbscache import read_from_cache_cluster,write_to_cache_cluster,delete_to_cache_cluster
-from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info
+#from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info
 from Polaris.utils.rawsql import my_custom_sql
 import logging
 logger = logging.getLogger('qdns_zone_config')
 import json
 
-
 def load_zone_from_table():
+    pass
+'''
     zoneqdns_dict = {}
     objs = tb_fact_nameid_info.objects.all()
     for obj in objs:
@@ -43,4 +45,5 @@ def load_zone_from_table():
         logger.info("the zone dict is null")
     for dnstype,zoneinfo in zoneqdns_dict.items():
         logger.info("the dnstype is {},the zone info is {}".format(dnstype,json.dumps(zoneinfo)))
-        write_to_cache_cluster("vipdevice","zone-config",str(dnstype),json.dumps(zoneinfo))  
+        write_to_cache_cluster("vipdevice","zone-config",str(dnstype),json.dumps(zoneinfo)) 
+''' 

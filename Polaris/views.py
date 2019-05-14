@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
 from Polaris.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer,AdminIpSerializer,DetectTaskSerializer,DetectDeviceAvailabilitySerializer,DetectDeviceAvailabilityStandardSerializer
-from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_fact_view_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info
+from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info,tb_fact_temp_view_info
 from rest_framework import mixins
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -17,7 +17,7 @@ from django.http import Http404
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.renderers import JSONRenderer
 from django.db.models import Q
-
+from django.http import HttpResponse
 #支持增删查改dnstype
 class Dnstypeinfo(viewsets.ModelViewSet):
     queryset = tb_fact_dnstype_info.objects.all()
@@ -29,25 +29,19 @@ class GetIdByDnsname(mixins.ListModelMixin,viewsets.GenericViewSet):
         obj = self.kwargs.get('dnsname', None)
         if obj is not None:
             queryset = tb_fact_dnstype_info.objects.filter(dns_name = obj)
-#        else:
-#            queryset = tb_fact_dnstype_info.objects.all()           
         return queryset
-
 #支持增删查改zone
 class Dnszoneinfo(viewsets.ModelViewSet):
     queryset = tb_fact_dnszone_info.objects.all()
     serializer_class = DnszoneSerializer
 #支持通过zonename查找 item
 class GetIdByZone(mixins.ListModelMixin,viewsets.GenericViewSet):
-    queryset = tb_fact_dnszone_info.objects.all()
     serializer_class = DnszoneSerializer
-    lookup_field = 'zone_name' 
-#   def get_queryset(self):
- #       obj = self.kwargs.get('zonename',None)
- #       if obj is not None:
- #           queryset = tb_fact_dnszone_info.objects.filter(zone_name = obj)
- #       return queryset
-
+    def get_queryset(self):
+        obj = self.kwargs.get('zonename',None)
+        if obj is not None:
+            queryset = tb_fact_dnszone_info.objects.filter(zone_name = obj)
+        return queryset
 #支持增删查改nameid的策略
 class NameidPolciyinfo(viewsets.ModelViewSet):
     queryset = tb_fact_nameidpolicy_info.objects.all()
@@ -74,13 +68,19 @@ class GetIdByVipdev(mixins.ListModelMixin,viewsets.GenericViewSet):
         if obj is not None:
             queryset = tb_fact_device_info.objects.filter(vip_address = obj)
         return queryset
-
+class UpdateDevByNodeid(viewsets.UpdateModelMixin,viewsets.GenericViewSet):
+    serializer_class = VipDeviceSerializer
+    def get_queryset(self):
+        obj = self.kwargs.get('nodeid', None)
+        if obj is not None:
+            tb_fact_device_info.objects.filter(node_id=obj).update(='xxx') 
+            
 #支持增删改查view
 class Viewtypeinfo(viewsets.ModelViewSet):
     queryset = tb_fact_viewtype_info.objects.all()
     serializer_class = ViewtypeSerializer
 class Viewinfo(viewsets.ModelViewSet):
-    queryset = tb_fact_view_info.objects.all()
+    queryset = tb_fact_temp_view_info.objects.all()
     serializer_class = ViewSerializer
 
 #支持输入father_id输出对应的内容
@@ -89,10 +89,20 @@ class GetIdByFatherid(mixins.ListModelMixin,viewsets.GenericViewSet):
     def get_queryset(self):
         obj = self.kwargs.get('fatherid', None)
         if obj is not None:
-            queryset = tb_fact_view_info.objects.filter(view_father_id = obj)
-        else:
-            queryset = tb_fact_view_info.objects.all()
+            queryset = tb_fact_temp_view_info.objects.filter(view_father_id = obj)
         return queryset
+#为了前期更好的查询，提供的该接口，即输入view对应的中文名字输出对应的view_id
+class GetIdByViewInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
+    serializer_class = ViewSerializer
+    def get_queryset(self):
+        country = self.kwargs.get('country', None)
+        isp = self.kwargs.get('isp', None)
+        region = self.kwargs.get('region', None)
+        province = self.kwargs.get('province', None)
+        city = self.kwargs.get('city', None)
+        queryset = tb_fact_temp_view_info.objects.filter(Q(view_country__contains = country) & Q(view_isp__contains=isp) & Q(view_region__contains=region) & Q(view_province__contains=province) & Q(view_city__contains=city))
+        return queryset
+
 #支持增删查改nameid
 class Nameidinfo(viewsets.ModelViewSet):
     queryset = tb_fact_nameid_info.objects.all()

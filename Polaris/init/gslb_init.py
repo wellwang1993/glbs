@@ -91,7 +91,7 @@ def load_confignameid_from_table():
 def update_nameid_from_disablepolciy():
     logger.info("start to execute  nameid policy")
     detect_device_availability("nameid-manual")
-    detect_device_availability("nameid-default")
+#    detect_device_availability("nameid-default")
 #加载别的策略
 @register_job(scheduler, "interval",seconds=10,replace_existing=True,misfire_grace_time=30,coalesce=True)
 def load_nameid_policy():

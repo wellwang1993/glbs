@@ -4,24 +4,26 @@ from Polaris import views
 
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
+#对dns类型的管理
 router.register(r'dnstype',views.Dnstypeinfo)
 router.register(r'getidbydnsname/(?P<dnsname>.*)',views.GetIdByDnsname,base_name = 'dnsname')
-
+#对zone文件的管理
 router.register(r'dnszone',views.Dnszoneinfo)
-#router.register(r'getidbyzone/(?P<zonename>.*)',views.GetIdByZone,base_name = 'zonename')
-router.register(r'getidbyzone/(?P<sss>.*)',views.GetIdByZone)
-
+router.register(r'getidbyzone/(?P<zonename>.*)',views.GetIdByZone,base_name = 'zonename')
+#对策略的管理
 router.register(r'nameidpolicy',views.NameidPolciyinfo)
 router.register(r'getidbypolicyname/(?P<policyname>.*)',views.GetIdByPolicy,base_name = 'policyname')
-
+#对虚拟设备的管理
 router.register(r'vipdevice',views.VipDeviceinfo)
 router.register(r'getidbyvipname/(?P<vipname>.*)',views.GetIdByVipdev,base_name = 'vipname')
+#批量更新节点的状态
+router.register(r'updatedevbynode/(?P<nodeid>.*)',views.UpdateDevByNodeid,base_name = 'nodeid')
 
 #对view的信息管理
 router.register(r'viewtype',views.Viewtypeinfo)
 router.register(r'view',views.Viewinfo)
 router.register(r'getidbyfatherid/(?P<fatherid>[0-9]+)',views.GetIdByFatherid,base_name = 'viewid')
-
+router.register(r'getidbyviewinfo/(?P<country>.*)/(?P<isp>.*)/(?P<region>.*)/(?P<province>.*)/(?P<city>.*)',views.GetIdByViewInfo,base_name = 'viewidinfo')
 #对nameid的管理
 router.register(r'nameid', views.Nameidinfo)
 #通过域名获取域名id

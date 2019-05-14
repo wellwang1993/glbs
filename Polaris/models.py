@@ -13,14 +13,15 @@ class tb_fact_dnstype_info(models.Model):
             return self.dns_name
 #存储zone类型的，dns_type作为外键 
 class tb_fact_dnszone_info(models.Model):
-	zone_name = models.CharField(max_length = 256)
-	zone_soa = models.CharField(max_length = 256)
-	ns_name = models.CharField(max_length = 256)
-	ns_address = models.CharField(max_length = 256)
-	ns_ttl = models.IntegerField(default=120)
-	dns_type = models.ForeignKey('tb_fact_dnstype_info',on_delete=models.CASCADE)
-	def __str__(self):
-        	return self.zone_name
+        internet_type = models.CharField(max_length = 256) 
+        record_type = models.CharField(max_length = 256)
+        dns_type = models.ForeignKey('tb_fact_dnstype_info',on_delete=models.CASCADE)
+        record_content = models.CharField(max_length = 256)
+        zone_name = models.CharField(max_length = 256)
+        record_name = models.CharField(max_length = 256)
+        record_ttl = models.IntegerField(default=120)
+        def __str__(self):
+            return self.zone_name
 #存储nameid策略的,后续nameid在选择策略的时候必须从这里选择，支持default,fuse等策略
 class tb_fact_nameidpolicy_info(models.Model):
 	policy_name = models.CharField(max_length = 254,unique=True)
@@ -59,6 +60,7 @@ class tb_fact_temp_view_info(models.Model):
     view_type = models.ForeignKey('tb_fact_viewtype_info',on_delete=models.CASCADE)
     def __str__(self):
         return "{}-{}-{}-{}-{}-{}".format(self.view_country,self.view_isp,self.view_region,self.view_province,self.view_city,self.view_grade_name)
+'''
 class tb_fact_view_info(models.Model):
 	view_id = models.IntegerField(default = 0,primary_key=True)
 	view_father_id = models.IntegerField(default = 0)
@@ -70,6 +72,7 @@ class tb_fact_view_info(models.Model):
 	view_type = models.ForeignKey('tb_fact_viewtype_info',on_delete=models.CASCADE)
 	def __str__(self):
 		return self.view_name
+'''
 #对设备的管理
 class tb_fact_device_info(models.Model):
         node_id = models.IntegerField(default = 0)
