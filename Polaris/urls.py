@@ -17,7 +17,7 @@ router.register(r'getidbypolicyname/(?P<policyname>.*)',views.GetIdByPolicy,base
 router.register(r'vipdevice',views.VipDeviceinfo)
 router.register(r'getidbyvipname/(?P<vipname>.*)',views.GetIdByVipdev,base_name = 'vipname')
 #批量更新节点的状态
-router.register(r'updatedevbynode/(?P<nodeid>.*)',views.UpdateDevByNodeid,base_name = 'nodeid')
+router.register(r'updatedevbynode/(?P<nodeid>.*)/(?P<status>.*)',views.UpdateDevByNodeid,base_name = 'nodeid')
 
 #对view的信息管理
 router.register(r'viewtype',views.Viewtypeinfo)
@@ -31,20 +31,20 @@ router.register(r'getidbyname/(?P<nameid>.*)',views.NameidGetByName,base_name='n
 
 #对nameid view的管理
 router.register(r'nameidview',views.NameidViewinfo)
-router.register(r'getidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetIdByNameidViewid,base_name = 'nameidview')
+router.register(r'getidbynameview/(?P<nameid>[0-9]+)/(?P<viewid>[0-9]+)',views.GetIdByNameidViewid,base_name = 'nameidview')
 router.register(r'delbynameid',views.DelByNameid)
-router.register(r'getitembynameid_inner/(?P<nameid>.*)',views.GetItemBynameid_inner,base_name='nameidviewinner')
+#通过域名id获取view信息
+router.register(r'getitembynameid_inner/(?P<nameid>[0-9]+)',views.GetItemBynameid_inner,base_name='nameidviewinner')
 
 
 #对nameid view device的管理
 router.register(r'nameidviewdevice',views.NameidViewDeviceinfo)
-router.register(r'getdidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetDIdByNameidViewid,base_name = 'dnameidview')
+router.register(r'getdidbynameview/(?P<nameid>[0-9]+)/(?P<viewid>[0-9]+)',views.GetDIdByNameidViewid,base_name = 'dnameidview')
 router.register(r'deldbynameid',views.DelDByNameid)
 #通过nameid,viewid,deviceid获取记录
-router.register(r'getidbynameviewdevice/(?P<nameid>.*)/(?P<viewid>.*)/(?P<deviceid>.*)',views.GetIdByNameidViewidDeviceid,base_name = 'nameidviewiddeviceid')
+router.register(r'getidbynameviewdevice/(?P<nameid>[0-9]+)/(?P<viewid>[0-9]+)/(?P<deviceid>[0-9]+)',views.GetIdByNameidViewidDeviceid,base_name = 'nameidviewiddeviceid')
 #通过域名id获取name,device信息
-router.register(r'getnamedevinfo/(?P<nameid>.*)',views.GetNameDevInfoByNameid,base_name='nameid')
-#router.register(r'getnamedevinfo',views.GetNameDevInfoByNameid)
+router.register(r'getnamedevinfo/(?P<nameid>[0-9]+)',views.GetNameDevInfoByNameid,base_name='nameid')
 
 #对cname的管理
 router.register(r'cname',views.CnameInfo)
@@ -52,10 +52,11 @@ router.register(r'getidbyopsubu/(?P<operator>.*)/(?P<supplier>.*)/(?P<bussiness>
 #router.register(r'getidbycname/(?P<cname>.*)',views.GetIdByCname,base_name = 'cname')
 #对nameid view cname的管理
 router.register(r'nameidviewcname',views.NameidViewCnameinfo)
-router.register(r'getcidbynameview/(?P<nameid>.*)/(?P<viewid>.*)',views.GetCIdByNameidViewid,base_name = 'cnameidview')
+router.register(r'getcidbynameview/(?P<nameid>[0-9]+)/(?P<viewid>[0-9]+)',views.GetCIdByNameidViewid,base_name = 'cnameidview')
 #通过nameid.viewid,cnameid查找记录
-router.register(r'getcidbynameviewcname/(?P<nameid>.*)/(?P<viewid>.*)/(?P<cnameid>.*)',views.GetCIdByNameidViewidCnameid,base_name = 'nameidviewidcnameid')
-router.register(r'getnamecnameinfo/(?P<nameid>.*)',views.GetNameCnameInfoByNameid,base_name='nameidcname')
+router.register(r'getcidbynameviewcname/(?P<nameid>[0-9]+)/(?P<viewid>[0-9]+)/(?P<cnameid>[0-9]+)',views.GetCIdByNameidViewidCnameid,base_name = 'nameidviewidcnameid')
+#通过域名id获取view,cname信息
+router.register(r'getnamecnameinfo/(?P<nameid>[0-9]+)',views.GetNameCnameInfoByNameid,base_name='nameidcname')
 
 
 #对adminip的管理
@@ -67,14 +68,11 @@ router.register('detecttask',views.DetectTaskInfo)
 router.register('putdeviceavailability',views.DetectDeviceAvailabilityInfo)
 #对设备可用性探测数据有效性的控制
 router.register('deviceavailabilitystandard',views.DetectDeviceAvailabilityStandardInfo)
-router.register(r'tests',views.testsss)
 
 urlpatterns = [
-   # path('ajax/GetRegion',views.GetRegion, name='ajax_GetRegion'),
     path('gettask/',views.url_get_vipaddress_from_cache),
     path('getnameid/',views.url_get_nameid_from_cache),
     path('getzone/',views.url_get_zone_from_cache),
-#    path('leadgeo/',views.url_leading_geoip_cache),
     path('', include(router.urls)),
 ]
 from Polaris.init.gslb_init import scheduler

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django_redis import get_redis_connection
 import logging
-logger = logging.getLogger('djs')
+logger = logging.getLogger('default')
 import json
 
 import json
@@ -23,15 +23,10 @@ def write_to_cache(key,value):
 def read_from_cache_cluster(con,cluster,key):
     if key == None or cluster == None or con == None:
         return None
-    #conn = get_redis_connection(con)
     conn = get_redis_connection("default")
     val = conn.hget(cluster,key) 
-    logger.info("@@@@@@@@@@@@@@@@@@@@")
-    logger.info(conn.hkeys(cluster))
-    logger.info(conn.hvals(cluster))
-    logger.info(val)
     if val:
-        return str(val,encoding = "utf8")
+        return str(val,encoding = "raw_unicode_escape")
     return None
 def write_to_cache_cluster(con,cluster,key,value):
     if key == None or cluster == None or con == None or value == None:
@@ -46,7 +41,11 @@ def delete_to_cache_cluster(con,cluster,key):
         return None
     conn = get_redis_connection("default")
     conn.hdel(cluster,key)
-
+def get_keys_from_cache(con,cluster):
+    if cluster == None or con == None:
+        return None
+    conn = get_redis_connection("default")
+    return conn.hkeys(cluster)
 def flushall_to_cache_cluster(con,cluster):
     conn = get_redis_connection("default")
     conn.flushall(cluster)

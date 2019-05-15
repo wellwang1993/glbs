@@ -5,5 +5,6 @@ logger = logging.getLogger('qdns_nameid_access')
 import json
 
 def get_nameid_from_cache(dnstype):
+    logger.info("the {} get nameid ".format(dnstype))
     return read_from_cache_cluster("vipdevice","qdns-nameidinfo",dnstype)
 

@@ -68,13 +68,20 @@ class GetIdByVipdev(mixins.ListModelMixin,viewsets.GenericViewSet):
         if obj is not None:
             queryset = tb_fact_device_info.objects.filter(vip_address = obj)
         return queryset
-class UpdateDevByNodeid(viewsets.UpdateModelMixin,viewsets.GenericViewSet):
+class UpdateDevByNodeid(mixins.ListModelMixin,viewsets.GenericViewSet):
     serializer_class = VipDeviceSerializer
     def get_queryset(self):
-        obj = self.kwargs.get('nodeid', None)
-        if obj is not None:
-            tb_fact_device_info.objects.filter(node_id=obj).update(='xxx') 
-            
+        nodeid = self.kwargs.get('nodeid', None)
+        status = self.kwargs.get('status', None)
+        if nodeid is not None and status is not None:
+            if status == "enable":
+                tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_enable_switch='enable') 
+                tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_status='enable') 
+            if status == "disable":
+                tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_enable_switch='disable') 
+                tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_status='disable') 
+            queryset = tb_fact_device_info.objects.filter(node_id=nodeid)
+            return queryset
 #支持增删改查view
 class Viewtypeinfo(viewsets.ModelViewSet):
     queryset = tb_fact_viewtype_info.objects.all()
@@ -140,17 +147,13 @@ class DelByNameid(mixins.DestroyModelMixin,viewsets.GenericViewSet):
     lookup_field= 'nameid_id'
     queryset = tb_dimension_nameid_view_info.objects.all() 
     def destroy(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        assert lookup_url_kwarg in self.kwargs, (
-            'Expected view %s to be called with a URL keyword argument '
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            'attribute on the view correctly.' %
-            (self.__class__.__name__, lookup_url_kwarg)
-        )
-        tb_dimension_nameid_view_info.objects.filter(nameid_id=self.kwargs[lookup_url_kwarg]).delete()    
-        return Response(status=status.HTTP_204_NO_CONTENT) 
-
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+            tb_dimension_nameid_view_info.objects.filter(nameid_id=self.kwargs[lookup_url_kwarg]).delete()  
+            return Response(status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 #支持通过域名id查找 item
 class GetItemBynameid_inner(mixins.ListModelMixin,viewsets.GenericViewSet):
    # queryset = tb_dimension_nameid_view_info.objects.all()
@@ -200,16 +203,13 @@ class DelDByNameid(mixins.DestroyModelMixin,viewsets.GenericViewSet):
     lookup_field = 'nameid_id'
     queryset = tb_dimension_nameid_view_device_info.objects.all()
     def destroy(self, request, *args, **kwargs):
-        queryset =  self.filter_queryset(self.get_queryset())
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        assert lookup_url_kwarg in self.kwargs, (
-            'Expected view %s to be called with a URL keyword argument '
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            'attribute on the view correctly.' %
-            (self.__class__.__name__, lookup_url_kwarg)
-        )
-        tb_dimension_nameid_view_device_info.objects.filter(nameid_id=self.kwargs[lookup_url_kwarg]).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            queryset =  self.filter_queryset(self.get_queryset())
+            lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+            tb_dimension_nameid_view_device_info.objects.filter(nameid_id=self.kwargs[lookup_url_kwarg]).delete()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 #对cname记录的增删改查
 class CnameInfo(viewsets.ModelViewSet):
     serializer_class = NameidCnameSerializer
@@ -223,8 +223,6 @@ class GetItemByOpSuBu(mixins.ListModelMixin,viewsets.GenericViewSet):
         bussiness = self.kwargs.get('bussiness', None)
         if operator is not None and supplier is not None and bussiness is not None:
             queryset = tb_fact_cname_info.objects.filter(Q(nameid_owner=operator) & Q(nameid_supplier=supplier) & Q(nameid_business=bussiness))
-        else:
-            queryset = tb_fact_cname_info.objects.all()           
         return queryset
 #支持按照域名模糊匹配
 
@@ -271,64 +269,10 @@ class AdminIpInfo(viewsets.ModelViewSet):
 class DetectTaskInfo(viewsets.ModelViewSet):
     queryset = tb_fact_detecttask_info.objects.all()
     serializer_class = DetectTaskSerializer 
-
-
-#def GetRegion(request):
-#class GetRegion(viewsets.ModelViewSet):
-#    regionid = request.GET.get('id')
-#    regioninfo = tb_fact_view_info.objects.filter(view_father_id = regionid)
-#    res = []
-#    for i in regioninfo:
-#        res.append([i.view_id, i.view_name])
-#    return render(request, 'region_dropdown_list_options.html',{'regioninfo':res})
-
-
-
-
-class testnameidlist(viewsets.ModelViewSet):
-    queryset = tb_dimension_nameid_view_device_info.objects.all()
-    serializer_class = NameidViewDeviceSerializer
-
-
-
-
-
- #   renderer_classes = [TemplateHTMLRenderer,]
-#    template_name = 'tb_dimension_nameid_view_device_info_list.html'
-#    def get(self, request, format=None):
-#        queryset = tb_dimension_nameid_view_device_info.objects.all()
-#        serializers = NameidViewDeviceSerializer(queryset, many=True)
-#        return Response({'queryset':queryset})    
-#    return Response(serializers.data,template_name ='tb_dimension_nameid_view_device_info_list.html')       
-# return Response(serializer.data)
-#    def post(self, request, format=None):
-#        serializer = NameidViewDeviceSerializer(data=request.data)
-#        if serializer.is_valid():
-#            serializer.save()
-#            return Response(serializer.data, status=status.HTTP_201_CREATED)
-#        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-class testnameidcreate(APIView):
-    template_name = 'tb_dimension_nameid_view_device_info_detail.html'
-
-    def get(self, request, pk):
-        profile = get_object_or_404(tb_dimension_nameid_view_device_info, pk=pk)
-        serializer = NameidViewDeviceSerializer(profile)
-        return Response({'serializer': serializer, 'profile': profile})
-
-    def post(self, request, pk):
-        profile = get_object_or_404(tb_dimension_nameid_view_device_info, pk=pk)
-        serializer = NameidViewDeviceSerializer(profile, data=request.data)
-        if not serializer.is_valid():
-            return Response({'serializer': serializer, 'profile': profile})
-        serializer.save()
-        return reverse_lazy('tb_dimension_nameid_view_device_info_detail-list')
-class testnameidupdate(UpdateView):
-    model = tb_dimension_nameid_view_device_info
-    success_url = reverse_lazy('person_changelist')
-
-class testsss(viewsets.ModelViewSet):
-    queryset = tb_dimension_nameid_view_device_info.objects.all() 
-    serializer_class = NameidViewDeviceListSerializer
+#对探测数据标准的管理
+class DetectDeviceAvailabilityStandardInfo(viewsets.ModelViewSet):
+    queryset = tb_fact_detectdeviceavailability_standard_info.objects.all()
+    serializer_class = DetectDeviceAvailabilityStandardSerializer
 
 #上传设备可用性的源数据
 class DetectDeviceAvailabilityInfo(viewsets.ModelViewSet):
@@ -351,14 +295,4 @@ from Polaris.qdns.get_zone_from_cache import get_zone_from_cache
 def url_get_zone_from_cache(request):
     dnstype = request.GET.get('dnstype','')
     return HttpResponse(get_zone_from_cache(dnstype))
-class DetectDeviceAvailabilityStandardInfo(viewsets.ModelViewSet):
-    queryset = tb_fact_detectdeviceavailability_standard_info.objects.all()
-    serializer_class = DetectDeviceAvailabilityStandardSerializer
-'''
-#导入原始geoip文件的
-from Polaris.Geoip.leading_ori_geoip_info import leading_ori_geoip_info
-def url_leading_geoip_cache(request):
-    leading_ori_geoip_info()
-    return HttpResponse("leading ok...")
-'''
 

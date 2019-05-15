@@ -14,7 +14,7 @@ class NameidPolciySerializer(serializers.ModelSerializer):
         model = tb_fact_nameidpolicy_info
         fields = '__all__'
 
-
+#对nameid的序列化
 #如果使用该类的话，则在上传zone内容的时候需要手写zone的内容
 class NameidDnsRelationinfo(serializers.ModelSerializer):
     class Meta:
@@ -25,10 +25,7 @@ class NameidPolicyRelationinfo(serializers.ModelSerializer):
         model = tb_fact_nameidpolicy_info
         fields = ['policy_name']
 class NameidListSerializer(serializers.ModelSerializer):
-    #这种就是展示zone的所有内容
-   # zone_type = DnszoneSerializer()
-    #这个就是只展示关键字段zone_name.推荐这种
-   # zone_type = NameidDnszoneRelationinfo()
+    #只展示关键的字段既可以
     dns_type = NameidDnsRelationinfo()
     nameid_policy = NameidPolicyRelationinfo()
     class Meta:
@@ -39,7 +36,7 @@ class NameidUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_nameid_info
         fields = '__all__'
-
+#view相关的序列化
 class ViewtypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_viewtype_info
@@ -48,6 +45,7 @@ class ViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_temp_view_info
         fields = '__all__'
+#虚拟设备的序列化
 class VipDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_device_info
@@ -62,10 +60,12 @@ class ViewtoNamiedSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_temp_view_info
         fields = ['view_country','view_isp','view_region','view_province','view_city']
+#nameid,view的序列化
 class NameidViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_info
         fields = '__all__'
+#nameid,view,device的序列化
 class NameidViewDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_device_info
@@ -102,10 +102,12 @@ class NameidViewCnameListSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_cname_info
         fields = ['nameid_id','nameid_view_id','nameid_cname_id','nameid_cname_ratio']
+#cname的序列化
 class NameidCnameSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_cname_info
         fields = '__all__'
+#nameid,view.cname的序列化
 class NameidViewCnameSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_cname_info
@@ -116,6 +118,7 @@ class AdminIpSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_adminip_info
         fields = '__all__'
+#探测任务描述的序列化
 class DetectTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_detecttask_info

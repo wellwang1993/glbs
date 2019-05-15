@@ -1,4 +1,4 @@
-from Polaris.utils.glbscache import read_from_cache_cluster,write_to_cache_cluster
+from Polaris.utils.glbscache import read_from_cache_cluster,write_to_cache_cluster,delete_to_cache_cluster,get_keys_from_cache
 from Polaris.models import tb_fact_nameid_info
 import logging
 logger = logging.getLogger('qdns_nameid_cluster')
@@ -17,6 +17,12 @@ def cluster_nameid_from_cache():
                 if dnstype_nameidinfo.get(dnstype) == None:
                     dnstype_nameidinfo[dnstype] = {}
                 dnstype_nameidinfo[dnstype][obj.nameid_name] = nameid_dict
+    keys = get_keys_from_cache("vipdevice","qdns-nameidinfo")
+    for key in keys:
+        key = str(key,encoding = "raw_unicode_escape")
+        if dnstype_nameidinfo.get(key) == None:
+            logger.info("the dnstype {} is disable".format(key))
+            delete_to_cache_cluster("vipdevice","qdns-nameidinfo",key)
     for dnstype,nameidinfo in dnstype_nameidinfo.items():
         logger.info("the dnstype is {},the nameid info is {}".format(dnstype,json.dumps(nameidinfo)))
         write_to_cache_cluster("vipdevice","qdns-nameidinfo",str(dnstype),json.dumps(nameidinfo))    
