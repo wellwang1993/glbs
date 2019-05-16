@@ -2,7 +2,7 @@
 import time
 import urllib.request
 import logging
-logger = logging.getLogger('dj')
+logger = logging.getLogger('default')
 def urllib_get(url, timeout_connect=60):
 
     try:
@@ -11,5 +11,6 @@ def urllib_get(url, timeout_connect=60):
         resp.close()
         return data
     except Exception as err:
+        logger.error(err)
         return None
 

@@ -1,14 +1,12 @@
 
-from Polaris.utils.glbscache import read_from_cache_cluster,write_to_cache_cluster,delete_to_cache_cluster
-#from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info
+from Polaris.utils.glbscache import read_from_cache_cluster,write_to_cache_cluster,delete_to_cache_cluster,read_from_cache_cluster,get_keys_from_cache
+from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info
 from Polaris.utils.rawsql import my_custom_sql
 import logging
 logger = logging.getLogger('qdns_zone_config')
 import json
 
 def load_zone_from_table():
-    pass
-'''
     zoneqdns_dict = {}
     objs = tb_fact_nameid_info.objects.all()
     for obj in objs:
@@ -22,7 +20,7 @@ def load_zone_from_table():
              for item in res:
                  id = item[0]
                  dnsname = item[1]
-                 sql = 'select zone_name,zone_soa,ns_name,ns_address,ns_ttl from Polaris_tb_fact_dnszone_info where dns_type_id = "{}"'.format(id)
+                 sql = 'select zone_name,record_name,record_content,internet_type,record_type,record_ttl from Polaris_tb_fact_dnszone_info where dns_type_id = "{}"'.format(id)
                  zoneres = my_custom_sql(sql)
                  if zoneres != None and len(zoneres) !=0:
                      zonename_tag = False
@@ -30,20 +28,26 @@ def load_zone_from_table():
                          zone_name = zoneitem[0]
                          if nameid.find(zone_name) != -1:
                              zonename_tag = True
-                         zone_soa = zoneitem[1]
-                         ns_name = zoneitem[2]
-                         ns_address = zoneitem[3]
-                         ns_ttl = zoneitem[4]
+                         record_name = zoneitem[1]
+                         record_content = zoneitem[2]
+                         internet_type = zoneitem[3]
+                         record_type = zoneitem[4]
+                         record_ttl = zoneitem[5]
                          if zoneqdns_dict.get(dnsname) == None:
                              zoneqdns_dict[dnsname] = {}
                          if zoneqdns_dict[dnsname].get(zone_name) == None:
                              zoneqdns_dict[dnsname][zone_name] = []
-                         zoneqdns_dict[dnsname][zone_name].append({"zone_soa":zone_soa,"ns_name":ns_name,"ns_address":ns_address,"ns_ttl":ns_ttl})
+                         zoneqdns_dict[dnsname][zone_name].append({"record_name":record_name,"record_content":record_content,"internet_type":internet_type,"record_type":record_type,"record_ttl":record_ttl})
                      if len(zoneqdns_dict) == 0 or zonename_tag == False:
                          logger.info("the nameid zone is not legal,the nameid is {}".format(nameid))
     if len(zoneqdns_dict) == 0:
         logger.info("the zone dict is null")
+    keys = get_keys_from_cache("vipdevice","zone-config")
+    for key in keys:
+        key = str(key,encoding = "raw_unicode_escape")
+        if zoneqdns_dict.get(key) == None:
+            logger.info("the nameid {} is disable".format(key))
+            delete_to_cache_cluster("vipdevice","zone-config",key) 
     for dnstype,zoneinfo in zoneqdns_dict.items():
         logger.info("the dnstype is {},the zone info is {}".format(dnstype,json.dumps(zoneinfo)))
-        write_to_cache_cluster("vipdevice","zone-config",str(dnstype),json.dumps(zoneinfo)) 
-''' 
+        write_to_cache_cluster("vipdevice","zone-config",str(dnstype),json.dumps(zoneinfo))

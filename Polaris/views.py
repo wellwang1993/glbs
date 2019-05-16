@@ -265,15 +265,39 @@ class GetNameCnameInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
 class AdminIpInfo(viewsets.ModelViewSet):
     queryset = tb_fact_adminip_info.objects.all()
     serializer_class = AdminIpSerializer
+class GetAdminIdByViewInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
+    serializer_class = AdminIpSerializer
+    def get_queryset(self):
+        isp = self.kwargs.get('isp', None)
+        region = self.kwargs.get('region', None)
+        province = self.kwargs.get('province', None)
+        queryset = tb_fact_adminip_info.objects.filter(Q(isp__contains=isp) & Q(region__contains=region) & Q(province__contains=province))
+        return queryset
+
 #对探测任务的管理
 class DetectTaskInfo(viewsets.ModelViewSet):
     queryset = tb_fact_detecttask_info.objects.all()
-    serializer_class = DetectTaskSerializer 
+    serializer_class = DetectTaskSerializer
+#通过探测任务查找id 
+class GetIdByTaskInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
+    serializer_class = DetectTaskSerializer
+    def get_queryset(self):
+        taskname = self.kwargs.get('taskname', None)
+        queryset = tb_fact_detecttask_info.objects.filter(detect_name=taskname)
+        return queryset
+
 #对探测数据标准的管理
 class DetectDeviceAvailabilityStandardInfo(viewsets.ModelViewSet):
     queryset = tb_fact_detectdeviceavailability_standard_info.objects.all()
     serializer_class = DetectDeviceAvailabilityStandardSerializer
 
+#通过运营商查找id 
+class GetIdByStandardInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
+    serializer_class = DetectDeviceAvailabilityStandardSerializer
+    def get_queryset(self):
+        standard = self.kwargs.get('standard', None)
+        queryset = tb_fact_detectdeviceavailability_standard_info.objects.filter(node_isp=standard)
+        return queryset
 #上传设备可用性的源数据
 class DetectDeviceAvailabilityInfo(viewsets.ModelViewSet):
     queryset = tb_fact_detectdeviceavailability_info.objects.all()

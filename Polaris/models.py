@@ -161,7 +161,7 @@ class tb_dimension_nameid_view_device_info(models.Model):
             return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_device_id)
 #cname信息
 class tb_fact_cname_info(models.Model):
-        nameid_cname = models.CharField(max_length = 256)
+        nameid_cname = models.CharField(max_length = 250,unique=True)
         nameid_owner = models.CharField(max_length = 256)
         nameid_supplier = models.CharField(max_length = 256)
         nameid_business = models.CharField(max_length = 256)
@@ -194,7 +194,8 @@ class tb_fact_adminip_info(models.Model):
         isp = models.CharField(max_length = 256)
         region = models.CharField(max_length = 256)
         province = models.CharField(max_length = 256)
-        status = models.CharField(max_length = 256,choices=status_choice,default = "disable")
+        availability_status = models.CharField(max_length = 256,choices=status_choice,default = "disable")
+        qos_status = models.CharField(max_length = 256,choices=status_choice,default = "disable")
         def __str__(self):
                 return self.admin_ip
 #描述探测任务的

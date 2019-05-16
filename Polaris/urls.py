@@ -61,13 +61,17 @@ router.register(r'getnamecnameinfo/(?P<nameid>[0-9]+)',views.GetNameCnameInfoByN
 
 #对adminip的管理
 router.register('adminip',views.AdminIpInfo)
+router.register(r'getadminidbyviewinfo/(?P<isp>.*)/(?P<region>.*)/(?P<province>.*)',views.GetAdminIdByViewInfo,base_name = 'viewadminidinfo')
 #对探测任务的管理
 router.register('detecttask',views.DetectTaskInfo)
+router.register(r'getidbytaskname/(?P<taskname>.*)',views.GetIdByTaskInfo,base_name='getidbytaskname')
 
 #汇报数据可用性的接口
 router.register('putdeviceavailability',views.DetectDeviceAvailabilityInfo)
+
 #对设备可用性探测数据有效性的控制
 router.register('deviceavailabilitystandard',views.DetectDeviceAvailabilityStandardInfo)
+router.register(r'getstandardinfo/(?P<standard>.*)',views.GetIdByStandardInfo,base_name='getstandardinfo')
 
 urlpatterns = [
     path('gettask/',views.url_get_vipaddress_from_cache),

@@ -31,8 +31,14 @@ class NameidListSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_nameid_info
         fields = '__all__'
-
+import re
 class NameidUpdateSerializer(serializers.ModelSerializer):
+    nameid_name =  serializers.CharField()
+    def validate_nameid_name(self,nameid_name):
+         pat_domain = re.compile(r"([a-zA-Z0-9][-a-zA-Z0-9]{0,62}(.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+.?)")
+         if not pat_domain.match(nameid_name):
+            raise serializers.ValidationError("域名格式错误")
+         return nameid_name
     class Meta:
         model = tb_fact_nameid_info
         fields = '__all__'
@@ -104,6 +110,12 @@ class NameidViewCnameListSerializer(serializers.ModelSerializer):
         fields = ['nameid_id','nameid_view_id','nameid_cname_id','nameid_cname_ratio']
 #cname的序列化
 class NameidCnameSerializer(serializers.ModelSerializer):
+    nameid_cname =  serializers.CharField()
+    def validate_nameid_cname(self,nameid_cname):
+         pat_domain = re.compile(r"([a-zA-Z0-9][-a-zA-Z0-9]{0,62}(.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+.?)")
+         if not pat_domain.match(nameid_cname):
+            raise serializers.ValidationError("域名格式错误")
+         return nameid_cname
     class Meta:
         model = tb_fact_cname_info
         fields = '__all__'
