@@ -7,6 +7,9 @@ router = DefaultRouter()
 #对dns类型的管理
 router.register(r'dnstype',views.Dnstypeinfo)
 router.register(r'getidbydnsname/(?P<dnsname>.*)',views.GetIdByDnsname,base_name = 'dnsname')
+#对dnsip的管理
+router.register(r'dnsip',views.DnsIpinfo)
+router.register(r'getidbydnsip/(?P<dnsip>.*)',views.GetIdByDnsip,base_name = 'dnsip')
 #对zone文件的管理
 router.register(r'dnszone',views.Dnszoneinfo)
 router.register(r'getidbyzone/(?P<zonename>.*)',views.GetIdByZone,base_name = 'zonename')
@@ -67,7 +70,9 @@ router.register('detecttask',views.DetectTaskInfo)
 router.register(r'getidbytaskname/(?P<taskname>.*)',views.GetIdByTaskInfo,base_name='getidbytaskname')
 
 #汇报数据可用性的接口
-router.register('putdeviceavailability',views.DetectDeviceAvailabilityInfo)
+router.register('putdeviceavailability',views.DetectDeviceAvailabilityInfo,base_name='putdevice')
+#展示数据的
+router.register('showputdeviceavailability',views.ShowDetectDeviceAvailabilityInfo)
 
 #对设备可用性探测数据有效性的控制
 router.register('deviceavailabilitystandard',views.DetectDeviceAvailabilityStandardInfo)
@@ -77,6 +82,7 @@ urlpatterns = [
     path('gettask/',views.url_get_vipaddress_from_cache),
     path('getnameid/',views.url_get_nameid_from_cache),
     path('getzone/',views.url_get_zone_from_cache),
+    path('getdnstype/',views.url_get_dnstype_from_cache),
     path('', include(router.urls)),
 ]
 from Polaris.init.gslb_init import scheduler
