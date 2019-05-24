@@ -24,8 +24,13 @@ class NameidPolicyRelationinfo(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_nameidpolicy_info
         fields = ['policy_name']
+class NameidZoneRelationinfo(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_dnszone_info
+        fields = ['zone_name']
 class NameidListSerializer(serializers.ModelSerializer):
     #只展示关键的字段既可以
+    zone_type = NameidZoneRelationinfo()
     dns_type = NameidDnsRelationinfo()
     nameid_policy = NameidPolicyRelationinfo()
     class Meta:

@@ -5,7 +5,7 @@ from Polaris.utils.rawsql import my_custom_sql
 import logging
 logger = logging.getLogger('policy-detect_device_availability')
 import json
-
+import re
 
 def vipdevice_availability_policy(multiple_config):
     qdns_res = {}
@@ -20,6 +20,10 @@ def vipdevice_availability_policy(multiple_config):
                 status = obj.nameid_status
                 policy = str(obj.nameid_policy)
                 policy_key = policy
+                dnszone = str(obj.zone_type.zone_name)
+                if not nameid.endswith(dnszone):
+                    logger.info("the nameid {} is  not legal...".format(nameid))
+                    continue
                 nameid_obj = read_from_cache_cluster("vipdevice",multiple_config,nameid)
                 if nameid_obj != None:
                     nameid_obj = json.loads(nameid_obj)

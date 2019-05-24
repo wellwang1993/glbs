@@ -110,6 +110,10 @@ def load_nameid_policy():
     for obj in objs:
         if obj.nameid_name is not None and obj.nameid_policy is not None and str(obj.nameid_policy) !="vipdevice_availability_policy":
             imp_module = obj.nameid_policy
+            dnszone = str(obj.zone_type.zone_name)
+            if not obj.nameid_name.endswith(dnszone):
+                logger.info("the nameid {} is  not legal...".format(nameid))
+                continue
             try:
                 ip_module = importlib.import_module('Polaris.policy.{}'.format(imp_module))
                 ip_module_cls = getattr(ip_module,str(imp_module))

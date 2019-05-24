@@ -57,7 +57,7 @@ class tb_fact_nameid_info(models.Model):
         ('disable','disable'),
         )
         nameid_name = models.CharField(max_length = 254,unique=True)
- #       zone_type = models.ForeignKey('tb_fact_dnszone_info',on_delete=models.CASCADE)
+        zone_type = models.ForeignKey('tb_fact_dnszone_info',on_delete=models.CASCADE,default='')
         dns_type = models.ForeignKey('tb_fact_dnstype_info',on_delete=models.CASCADE)
         nameid_status = models.CharField(max_length = 256,choices=status_choice) 
         nameid_policy = models.ForeignKey('tb_fact_nameidpolicy_info',on_delete=models.CASCADE)
