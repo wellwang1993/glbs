@@ -9,12 +9,17 @@ import json
 #这里Polaris_tb_fact_device_info在筛选的过程中，没有把它的状态考虑进来，因为如果下线的时候肯定会设置为disable，那么最终这台设备的状态就是disable的，这样的话最终在生成配置文件的时候会把设备剔除掉，当然这是自动探测最好的时候
 def gen_detect_viplist_cache():
     try:
-        sql = "select detect_frency from Polaris_tb_fact_detecttask_info where detect_name='detect_device_availability'"
+        sql = "select detect_frency,detect_frency_unit from Polaris_tb_fact_detecttask_info where detect_name='detect_device_availability'"
         res = my_custom_sql(sql)
         frequency = 15
+        frequency_unit = 'second'
         for item in res:
             frequency = item[0]
-        sql = "select a.admin_ip,b.vip_address,a.isp,a.status from Polaris_tb_fact_adminip_info as a left join Polaris_tb_fact_device_info as b on a.isp =b.node_isp" 
+            frequency_unit = item[1]
+            if frequency == None or frequency_unit == None:
+                frequency = 15
+                frequency_unit = 'second'
+        sql = "select a.admin_ip,b.vip_address,a.isp,a.availability_status from Polaris_tb_fact_adminip_info as a left join Polaris_tb_fact_device_info as b on a.isp =b.node_isp" 
         res = my_custom_sql(sql)
         raw_vip = {}
         for item in res:
@@ -28,6 +33,8 @@ def gen_detect_viplist_cache():
                 raw_vip[adminip]["adminip_isp"] = isp
                 raw_vip[adminip]["detect_switch"] = status
                 raw_vip[adminip]["frequency"] = frequency
+            #    raw_vip[adminip]["frequency_unit"] = frequency_unit
+                
             raw_vip[adminip]["vip_address"].append(vip)
         keys = get_keys_from_cache("vipdevice","detect-vipaddress")
         for key in keys:
@@ -56,8 +63,19 @@ def load_device_availability_cache():
             isp_standard_data[isp]["total_value"] = total_value
             isp_standard_data[isp]["absolute_value"] = absolute_value
             isp_standard_data[isp]["relative_rate"] = relative_rate
-
-        sql = "select vip_address,availability,admin_isp,count(availability) from Polaris_tb_fact_detectdeviceavailability_info where create_time >= DATE_FORMAT(DATE_ADD(now(), INTERVAL - 1 MONTH),'%y-%m-%d %H:%i') group by vip_address,availability"
+        
+        sql = "select effective_time,effective_time_unit from Polaris_tb_fact_detecttask_info where detect_name='detect_device_availability'"
+        res = my_custom_sql(sql)
+        effective_time = 15
+        effective_time_unit = 'second'
+        for item in res:
+            effective_time = item[0]
+            effective_time_unit = item[1]
+            if effective_time == None or effective_time_unit == None:
+                effective_time = 15
+                effective_time_unit = 'second'
+        #这里group by vip和availability，以vip为key,拿到最终上报的关于该vip的总的探针个数，上报的状态，以及运营商
+        sql = 'select vip_address,availability,admin_isp,count(availability) from Polaris_tb_fact_detectdeviceavailability_info where create_time >= DATE_FORMAT(DATE_ADD(now(), INTERVAL - {} {}),"%y-%m-%d %H:%i") group by vip_address,availability'.format(effective_time,effective_time_unit)
         res = my_custom_sql(sql)
         vip_avil_dict = {}
         for item in res:
@@ -79,7 +97,7 @@ def load_device_availability_cache():
         detect_vip_status = {}
         #if vip_avil_dict.get(vip_address) == None or vip_avil_dict[vip_address][1] < num:
         #    vip_avil_dict[vip_address] = [status,num,admin_isp]
-        #会有三种状态，对于数据不符合检验标准的，都认为是无效的，对于无效的探测数据，还是要采用手工配置的方式
+        #开始确定每个vip的状态,对于每个vip都要满足俩个标准，一个是上报的探针个数要达到那个绝对值，还有一个是要达到那个相对值,会有三种状态，对于数据不符合检验标准的，都认为是无效的，对于无效的探测数据，还是要采用手工配置的方式
         for item in vip_avil_dict:
             status = vip_avil_dict[item][0]
             num = vip_avil_dict[item][1]
