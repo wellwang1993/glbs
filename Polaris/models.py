@@ -160,6 +160,7 @@ class tb_dimension_nameid_view_info(models.Model):
             unique_together = ('nameid_id','nameid_view_id')
         def __str__(self):
             return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_preferred)
+import json
 #域名和view和设备的关系
 class tb_dimension_nameid_view_device_info(models.Model):
         status_choice = (
@@ -174,8 +175,9 @@ class tb_dimension_nameid_view_device_info(models.Model):
         class Meta:
             ordering = ['id']
             unique_together = ('nameid_id','nameid_view_id','nameid_device_id')
-        def __str__(self):
-            return "{}_{}_{}".format(self.nameid_id,self.nameid_view_id,self.nameid_device_id)
+       # def __str__(self):
+       #     return json.dumps({"nameid_id":self.nameid_id,"nameid_view_id":self.nameid_view_id,"nameid_device_id":self.nameid_device_id,"nameid_device_ratio":self.nameid_device_ratio,"nameid_device_status":self.nameid_device_status})
+           # return "{}_{}_{}".format(self.nameid_id,self.nameid_view_id,self.nameid_device_id)
 #cname信息
 class tb_fact_cname_info(models.Model):
         nameid_cname = models.CharField(max_length = 250,unique=True)
@@ -206,11 +208,13 @@ class tb_fact_adminip_info(models.Model):
         ('enable','enable'),
         ('disable','disable'),
         )
-        node_id = models.IntegerField()
+        node_id = models.CharField(max_length = 256,default='0')
         admin_ip = models.CharField(max_length = 150,unique=True)
+        country = models.CharField(max_length = 256,default='0')
         isp = models.CharField(max_length = 256)
         region = models.CharField(max_length = 256)
         province = models.CharField(max_length = 256)
+        city = models.CharField(max_length = 256,default='0')
         availability_status = models.CharField(max_length = 256,choices=status_choice,default = "disable")
         qos_status = models.CharField(max_length = 256,choices=status_choice,default = "disable")
         def __str__(self):
