@@ -57,6 +57,8 @@ def load_confignameid_from_table():
                 #这个是获取所有view信息的，会以view的id为key,view的元信息为value.是从dimension_view表中取得的信息
                 url = "{}/{}/".format("http://127.0.0.1:8000/getitembynameid",obj.id)
                 nameid_view_data = load_data(url)
+                logger.info(nameid_view_data)
+                logger.info("hhhh")
                 if nameid_view_data is None or nameid_view_data.get("results") is None or len(nameid_view_data["results"]) == 0:
                     continue
                 obj_list = nameid_view_data["results"]

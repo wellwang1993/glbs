@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from Polaris.utils.glbscache import read_from_cache_cluster,get_keys_from_cache
+from rest_framework.decorators import action
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
@@ -21,6 +23,64 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.renderers import JSONRenderer
 from django.db.models import Q
 from django.http import HttpResponse
+#from Polaris.utils.exception import Error
+from django.db.transaction import set_rollback
+
+class MyModelViewSet(viewsets.ModelViewSet):
+    def update(self, request, *args, **kwargs):
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            is_valid = serializer.is_valid(raise_exception=False)
+            if not is_valid:
+                return Response({'code':0, 'msg':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+            self.perform_update(serializer)
+            if getattr(instance, '_prefetched_objects_cache', None):
+                # If 'prefetch_related' has been applied to a queryset, we need to
+                # forcibly invalidate the prefetch cache on the instance.
+                instance._prefetched_objects_cache = {}
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    #调用自定义的异常，把API的异常集中到view层处理，而且需要把is_valid的raise_exception改成false,不然异常就卡在那里不往下走了
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            is_valid = serializer.is_valid(raise_exception=False)
+            if not is_valid:
+                return Response({'code':0, 'msg':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response({'code':1,'msg':"delok"},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+
 #支持增删查改dnstype
 class Dnstypeinfo(viewsets.ModelViewSet):
     queryset = tb_fact_dnstype_info.objects.all()
@@ -203,75 +263,103 @@ class GetIdByViewInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
         return queryset
 
 #支持增删查改nameid
-class Nameidinfo(viewsets.ModelViewSet):
+class Nameidinfo(MyModelViewSet):
     queryset = tb_fact_nameid_info.objects.all()
     def get_serializer_class(self):
-        if self.action in ['list','retrieve']:
+        if self.action in ['list','retrieve','universal_matching_nameid','get_all_nameid']:
             return NameidListSerializer
         return NameidUpdateSerializer
-#根据域名获取域名的id
-class NameidGetByName(mixins.ListModelMixin,viewsets.GenericViewSet):
-    def get_serializer_class(self):
-        if self.action in ['list','retrieve']:
-            return NameidListSerializer
-        return NameidUpdateSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        if nameid is not None:
+        
+    @action(detail=False,methods=['get'])
+    def universal_matching_nameid(self,request):
+        try:
+            nameid = request.GET.get('nameid')
             queryset = tb_fact_nameid_info.objects.filter(nameid_name__contains = nameid)
-        return queryset
-from django.db import IntegrityError, transaction 
-def CopyName(request):
-    record_list = []
-    try:
-        nameid = request.GET.get('nameid')
-        nameid_id = request.GET.get('nameid_id')
-        with transaction.atomic():
-            queryset = tb_fact_nameid_info.objects.filter(id = nameid_id)
-            if queryset and len(queryset) != 0:
-                obj = queryset[0]
-                newnameobj = tb_fact_nameid_info.objects.create(nameid_name=nameid,zone_type=obj.zone_type,dns_type=obj.dns_type,nameid_status=obj.nameid_status,nameid_policy=obj.nameid_policy)
-                
-                querysetview = tb_dimension_nameid_view_info.objects.filter(nameid_id_id=nameid_id) 
-                if querysetview and len(querysetview) != 0:
-                    for objview in querysetview:
-                        print(objview)
-                        tb_dimension_nameid_view_info.objects.create(nameid_id=newnameobj,nameid_view_id=objview.nameid_view_id,nameid_resolve_type=objview.nameid_resolve_type,nameid_max_ip=objview.nameid_max_ip,nameid_preferred=objview.nameid_preferred,nameid_status=objview.nameid_status,nameid_ttl=objview.nameid_ttl)
-                    querysetviewdev = tb_dimension_nameid_view_device_info.objects.filter(nameid_id_id=nameid_id)
-                    if querysetviewdev and len(querysetviewdev) !=0:
-                        for objviewdev in querysetviewdev:
-                            res = tb_dimension_nameid_view_device_info.objects.create(nameid_id=newnameobj,nameid_view_id=objviewdev.nameid_view_id,nameid_device_id=objviewdev.nameid_device_id,nameid_device_ratio=objviewdev.nameid_device_ratio,nameid_device_status=objviewdev.nameid_device_status)
-                            record_list.append(res)
-                    querysetviewcname = tb_dimension_nameid_view_cname_info.objects.filter(nameid_id_id=nameid_id)
-                    if querysetviewcname and len(querysetviewcname) !=0:
-                        for objviewcname in querysetviewcname:
-                            res = tb_dimension_nameid_view_cname_info.objects.create(nameid_id=newnameobj,nameid_view_id=objviewcname.nameid_view_id,nameid_cname_id=objviewcname.nameid_cname_id,nameid_cname_ratio=objviewcname.nameid_cname_ratio,nameid_cname_status=objviewcname.nameid_cname_status)
-                            record_list.append(res)
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)
-
-from Polaris.utils.glbscache import read_from_cache_cluster,get_keys_from_cache
-#通过域名获取运维配置的解析
-def url_get_nameidconfig(request):
-    nameid = request.GET.get('nameid','')    
-    return HttpResponse(read_from_cache_cluster("vipdevice","nameid-manual",nameid))
-
-#通过域名获取经过策略调整后的解析
-def url_get_nameidqdnsconfig(request):
-    nameid = request.GET.get('nameid','')    
-    queryset = tb_fact_nameid_info.objects.filter(nameid_name = nameid)
-    
-    if queryset and len(queryset) !=0:
-        obj = queryset[0]
-        if obj:
-            res =  read_from_cache_cluster("vipdevice",str(obj.nameid_policy),nameid)
-            if res == None:
-                return HttpResponse("")
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    @action(detail=False,methods=['get'])
+    def get_all_nameid(self,request):
+        try:
+            queryset = tb_fact_nameid_info.objects.all()
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    @action(detail=False,methods=['get'])
+    def get_nameid_from_config(self,request):
+        try:
+            nameid = request.GET.get('nameid')   
+            res = read_from_cache_cluster("vipdevice","nameid-manual",nameid)
+            if res: 
+                return Response({'code':1,'msg':[res]},status=status.HTTP_200_OK)
             else:
-                return HttpResponse(res)
-    return HttpResponse("")
-
+                return Response({'code':0,'msg':str("the nameid is not exixts")},status=status.HTTP_400_BAD_REQUEST)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    
+    def get_nameid_from_qdnsconfig(self,request):  
+        try:
+            nameid = request.GET.get('nameid')   
+            queryset = tb_fact_nameid_info.objects.filter(nameid_name = nameid)
+            if queryset and len(queryset) !=0:
+                obj = queryset[0]
+                if obj:
+                    res =  read_from_cache_cluster("vipdevice",str(obj.nameid_policy),nameid)
+                    if res != None:
+                        return Response({'code':1,'msg':[res]},status=status.HTTP_200_OK)
+            return Response({'code':0,'msg':str("the nameid is not exixts")},status=status.HTTP_400_BAD_REQUEST)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+      
+    @action(detail=False,methods=['get'])
+    def copy_name(self,request):
+        record_list = []
+        try:
+            nameid = request.GET.get('nameid')
+            nameid_id = request.GET.get('nameid_id')
+            with transaction.atomic():
+                queryset = tb_fact_nameid_info.objects.filter(id = nameid_id)
+                if queryset and len(queryset) != 0:
+                    obj = queryset[0]
+                    serializer = NameidUpdateSerializer(data={"nameid_name":nameid,"zone_type":obj.zone_type_id,"dns_type":obj.dns_type_id,"nameid_status":obj.nameid_status,"nameid_policy":obj.nameid_policy_id})
+                    if not serializer.is_valid():
+                        return Response({'code':0,'msg':str(serializer.errors)},status=status.HTTP_400_BAD_REQUEST)
+                    serializer.save()
+                    res = tb_fact_nameid_info.objects.filter(nameid_name=nameid)
+                    newnameidobj = res[0].id
+                    querysetview = tb_dimension_nameid_view_info.objects.filter(nameid_id_id=nameid_id) 
+                    if querysetview and len(querysetview) != 0:
+                        for objview in querysetview:
+                            serializer = NameidViewSerializer(data={"nameid_id":newnameidobj,"nameid_view_id":objview.nameid_view_id_id,"nameid_resolve_type":objview.nameid_resolve_type,"nameid_max_ip":objview.nameid_max_ip,"nameid_preferred":objview.nameid_preferred,"nameid_status":objview.nameid_status,"nameid_ttl":objview.nameid_ttl})
+                            if not serializer.is_valid():
+                                raise serializers.ValidationError
+                            else:
+                                record_list.append(serializer.data)
+                        querysetviewdev = tb_dimension_nameid_view_device_info.objects.filter(nameid_id_id=nameid_id)
+                        if querysetviewdev and len(querysetviewdev) !=0:
+                            for objviewdev in querysetviewdev:
+                                serializer = NameidViewDeviceSerializer(data={"nameid_id":newnameidobj,"nameid_view_id":objviewdev.nameid_view_id_id,"nameid_device_id":objviewdev.nameid_device_id_id,"nameid_device_ratio":objviewdev.nameid_device_ratio,"nameid_device_status":objviewdev.nameid_device_status})
+                                if not serializer.is_valid():
+                                    raise serializers.ValidationError
+                                else:
+                                    record_list.append(serializer.data)
+                        querysetviewcname = tb_dimension_nameid_view_cname_info.objects.filter(nameid_id_id=nameid_id)
+                        if querysetviewcname and len(querysetviewcname) !=0:
+                            for objviewcname in querysetviewcname:
+                                serializer = NameidViewCnameSerializer(data={"nameid_id":newnameidobj,"nameid_view_id":objviewcname.nameid_view_id_id,"nameid_cname_id":objviewcname.nameid_cname_id_id,"nameid_cname_ratio":objviewcname.nameid_cname_ratio,"nameid_cname_status":objviewcname.nameid_cname_status})
+                                if not serializer.is_valid():
+                                    raise serializers.ValidationError
+                                else:
+                                    record_list.append(serializer.data)
+                    else:
+                        return Response({'code':0,'msg':"the nameid view is not exixts"},status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'code':0,'msg':"the nameid is not exixts"},status=status.HTTP_400_BAD_REQUEST)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'code':1,'msg':record_list},status=status.HTTP_200_OK)
 
 #对域名和view之间的管理
 class NameidViewinfo(viewsets.ModelViewSet):

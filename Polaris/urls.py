@@ -30,8 +30,6 @@ router.register(r'getidbyfatherid/(?P<fatherid>[0-9]+)',views.GetIdByFatherid,ba
 router.register(r'getidbyviewinfo/(?P<country>.*)/(?P<isp>.*)/(?P<region>.*)/(?P<province>.*)/(?P<city>.*)',views.GetIdByViewInfo,base_name = 'viewidinfo')
 #对nameid的管理
 router.register(r'nameid', views.Nameidinfo)
-#通过域名获取具体的域名信息
-router.register(r'getidbyname/(?P<nameid>.*)',views.NameidGetByName,base_name='nameid')
 
 #对nameid view的管理
 router.register(r'nameidview',views.NameidViewinfo)
@@ -94,12 +92,8 @@ urlpatterns = [
     path('getzone/',views.url_get_zone_from_cache),
     path('getdnstype/',views.url_get_dnstype_from_cache),
     
-    #复制域名
-    path('copyname/',views.CopyName),
     #获取经过策略以后的解析
     path('getqdnsnameidconfig/',views.url_get_nameidqdnsconfig),
-    #获取运维配置的解析
-    path('getnameidconfig/',views.url_get_nameidconfig),
 
     #删除nameid view关系表中的view的时候，需要同时删除该view在nameid view device表和nameid view cname关系表中的记录
     path('delnameidview/',views.NameidViewDelinfo),

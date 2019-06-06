@@ -41,11 +41,9 @@ class NameidUpdateSerializer(serializers.ModelSerializer):
     nameid_name =  serializers.CharField()
     def validate_nameid_name(self,nameid_name):
          pat_domain = re.compile(r"([a-zA-Z0-9][-a-zA-Z0-9]{0,62}(.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+.?)")
-         print(pat_domain.match(nameid_name))
          if not pat_domain.match(nameid_name):
-            raise serializers.ValidationError("域名格式错误")
+             raise serializers.ValidationError("域名格式错误")
          return nameid_name
-
          #pat_domain = re.compile(r"([a-zA-Z0-9][-a-zA-Z0-9]{0,62}(.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+.?)")
          #if not pat_domain.match(nameid_name):
          #   raise serializers.ValidationError("域名格式错误")
