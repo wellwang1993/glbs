@@ -61,7 +61,16 @@ class DnsIpUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnsip_info
         fields = '__all__'
-
+#对dnszone的管理
+class DnszoneListSerializer(serializers.ModelSerializer):
+    dns_type = NameidDnsRelationinfo()
+    class Meta:
+        model = tb_fact_dnszone_info
+        fields = '__all__'
+class DnszoneUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_dnszone_info
+        fields = '__all__'
 #view相关的序列化
 class ViewtypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -105,7 +114,7 @@ class PartVipDeviceSerializer(serializers.ModelSerializer):
 class PartViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_temp_view_info
-        fields = ['id','view_country','view_isp','view_region','view_province','view_city']
+        fields = ['id','view_default','view_country','view_isp','view_region','view_province','view_city']
 
 class NameidViewListSerializer(serializers.ModelSerializer):
     nameid_view_id = PartViewSerializer()

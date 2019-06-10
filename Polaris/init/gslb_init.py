@@ -55,13 +55,11 @@ def load_confignameid_from_table():
         if obj.nameid_name is not None and obj.nameid_policy is not None and obj.nameid_status == 'enable':
             try:
                 #这个是获取所有view信息的，会以view的id为key,view的元信息为value.是从dimension_view表中取得的信息
-                url = "{}/{}/".format("http://127.0.0.1:8000/getitembynameid",obj.id)
+                url = "{}{}".format("http://127.0.0.1:8000/nameidview/get_info_by_nameid/?nameid=",obj.id)
                 nameid_view_data = load_data(url)
-                logger.info(nameid_view_data)
-                logger.info("hhhh")
-                if nameid_view_data is None or nameid_view_data.get("results") is None or len(nameid_view_data["results"]) == 0:
+                if nameid_view_data is None or nameid_view_data.get("code") is None or nameid_view_data["code"]==0 or nameid_view_data.get("msg") is None or len(nameid_view_data["msg"]) == 0:
                     continue
-                obj_list = nameid_view_data["results"]
+                obj_list = nameid_view_data["msg"]
                 nameid_view_dict = {}
                 for item in obj_list:
                     viewobj = ViewClass().genobj(item)
@@ -69,17 +67,17 @@ def load_confignameid_from_table():
                     nameid_view_dict[item["nameid_view_id"]["id"]] = viewobj
                 logger.info("the nameid is {}.the view is {}".format(obj.nameid_name,json.dumps(nameid_view_dict,default=serialize_instance,ensure_ascii=False)))
                 #这个是获取所有view和device信息的，是通过 diomension_view_device表中取得的，这里会有详细的nameid_name,device_name，也有view_id,这里会用上面的view_id进行替换。形成最终的信息。
-                url = "{}/{}/".format("http://127.0.0.1:8000/getnamedevinfo",obj.id)
+                url = "{}{}".format("http://127.0.0.1:8000/nameidviewdevice/get_info_by_nameid/?nameid=",obj.id)
                 nameid_device_data = load_data(url)
-                nameidobj = NameidClass()            
-                if nameid_device_data != None and nameid_device_data.get("results") != None and len(nameid_device_data["results"]) != 0:
-                    obj_list = nameid_device_data["results"]
+                nameidobj = NameidClass()  
+                if nameid_device_data != None and nameid_device_data.get("code") != None and nameid_device_data["code"]==1 and nameid_device_data.get("msg") != None and len(nameid_device_data["msg"]) != 0:  
+                    obj_list = nameid_device_data["msg"]
                     nameid_name = nameidobj.genobj(obj_list,nameid_view_dict)
                 #这个是获取所有view和cname信息的，是通过dimension_view_cname表中取得的，这里会有详细的cname信息，同样是去填充上面的类中的cname信息。
-                url = "{}/{}/".format("http://127.0.0.1:8000/getnamecnameinfo",obj.id)
+                url = "{}{}".format("http://127.0.0.1:8000/nameidviewcname/get_info_by_nameid/?nameid=",obj.id)
                 nameid_cname_data = load_data(url)
-                if nameid_cname_data != None and nameid_cname_data.get("results") != None and len(nameid_cname_data["results"]) !=0:
-                    obj_list = nameid_cname_data["results"]
+                if nameid_cname_data != None and nameid_cname_data.get("code") != None and nameid_cname_data["code"]==1 and nameid_cname_data.get("msg") != None and len(nameid_cname_data["msg"]) != 0:  
+                    obj_list = nameid_cname_data["msg"]
                     nameid_name = nameidobj.genobj(obj_list,nameid_view_dict)
                 current_nameid_dict[obj.nameid_name] = nameidobj
                 #最终nameidobj中存储的就是配置的view和每个view中对应的设备或者cname信息。后面的都是基于此来做解析的。会以nameid_name为key,它的元信息为value存入到cache中

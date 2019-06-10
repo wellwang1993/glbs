@@ -38,6 +38,7 @@ class NameidClass:
         for item in obj_list:
             #view_id = item["nameid_view_id"]["id"]
             view_id = []
+            view_default = item["nameid_view_id"]['view_default']
             view_country = item["nameid_view_id"]['view_country']
             if view_country:
                 view_id.append(view_country)
@@ -53,7 +54,10 @@ class NameidClass:
             view_city = item["nameid_view_id"]['view_city']
             if view_city:
                 view_id.append(view_city)
-            view_id = '_'.join(view_id)
+            if len(view_id) ==0:
+                view_id = view_default
+            else:
+                view_id = '_'.join(view_id)
             if self.nameid_data_dict.get(view_id) == None:
                 self.nameid_data_dict[view_id] = nameid_view_dict.get(item["nameid_view_id"]["id"]) 
             if item.get("nameid_device_id") != None and self.nameid_data_dict.get(view_id) != None:

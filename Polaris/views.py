@@ -11,7 +11,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
-from Polaris.serializers import DnstypeSerializer,DnszoneSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer,AdminIpSerializer,DetectTaskSerializer,DetectDeviceAvailabilitySerializer,DetectDeviceAvailabilityStandardSerializer,DnsIpListSerializer,DnsIpUpdateSerializer,NameidViewListSerializer
+from Polaris.serializers import DnstypeSerializer,DnszoneListSerializer,DnszoneUpdateSerializer,NameidPolciySerializer,NameidListSerializer,NameidUpdateSerializer,ViewtypeSerializer,ViewSerializer,NameidViewSerializer,NameidViewDeviceSerializer,VipDeviceSerializer,NameidViewDeviceSerializer,NameidViewDeviceListSerializer,NameidViewCnameSerializer,NameidCnameSerializer,NameidViewCnameListSerializer,AdminIpSerializer,DetectTaskSerializer,DetectDeviceAvailabilitySerializer,DetectDeviceAvailabilityStandardSerializer,DnsIpListSerializer,DnsIpUpdateSerializer,NameidViewListSerializer
 from Polaris.models import tb_fact_nameid_info,tb_fact_dnszone_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info,tb_fact_temp_view_info,tb_fact_dnsip_info
 from rest_framework import mixins
 from rest_framework import viewsets
@@ -82,185 +82,212 @@ class MyModelViewSet(viewsets.ModelViewSet):
             return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
 
 #支持增删查改dnstype
-class Dnstypeinfo(viewsets.ModelViewSet):
+class Dnstypeinfo(MyModelViewSet):
     queryset = tb_fact_dnstype_info.objects.all()
     serializer_class = DnstypeSerializer
-#通过dnsname查找item
-class GetIdByDnsname(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = DnstypeSerializer
-    def get_queryset(self):
-        obj = self.kwargs.get('dnsname', None)
-        if obj is not None:
-            queryset = tb_fact_dnstype_info.objects.filter(dns_name__contains = obj)
-        return queryset
+    #通过dnsname查找item
+    @action(detail=False,methods=['get'])
+    def universal_matching_dnstype(self,request):
+        try:
+            dnstype = request.GET.get('dnstype')
+            queryset = tb_fact_dnstype_info.objects.all()
+            if dnstype != None:
+                queryset = queryset.filter(dns_name__contains = dnstype)
+            serializer = self.serializer_class(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
 #支持增删查改dnsip
-class DnsIpinfo(viewsets.ModelViewSet):
+class DnsIpinfo(MyModelViewSet):
     queryset = tb_fact_dnsip_info.objects.all()
     def get_serializer_class(self):
         if self.action in ['list','retrieve']:
             return DnsIpListSerializer
         return DnsIpUpdateSerializer
-#通过dnsip查找item
-class GetIdByDnsip(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = DnsIpListSerializer
-    def get_queryset(self):
-        dnsip = self.kwargs.get('dnsip', None)
-        queryset = tb_fact_dnsip_info.objects.filter(dns_ip__contains = dnsip)
-        return queryset
+    #通过dnsip查找item
+    @action(detail=False,methods=['get'])
+    def universal_matching_dnsip(self,request):
+        try:
+            dnsip = request.GET.get('dnsip')
+            queryset = tb_fact_dnsip_info.objects.all()
+            if dnsip != None:
+                queryset = queryset.filter(dns_ip__contains = dnsip)
+            serializer = DnsIpListSerializer(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
 
 #支持增删查改zone
-class Dnszoneinfo(viewsets.ModelViewSet):
+class Dnszoneinfo(MyModelViewSet):
     queryset = tb_fact_dnszone_info.objects.all()
-    serializer_class = DnszoneSerializer
-#支持通过zonename查找 item
-class GetIdByZone(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = DnszoneSerializer
-    def get_queryset(self):
-        obj = self.kwargs.get('zonename',None)
-        if obj is not None:
-            queryset = tb_fact_dnszone_info.objects.filter(zone_name__contains = obj)
-        return queryset
-
+    def get_serializer_class(self):
+        if self.action in ['list','retrieve','universal_matching_dnszone']:
+            return DnszoneListSerializer
+        return DnszoneUpdateSerializer
+    #支持通过zonename查找 item
+    @action(detail=False,methods=['get'])
+    def universal_matching_dnszone(self,request):
+        try:
+            zonename = request.GET.get('zonename')
+            queryset = tb_fact_dnszone_info.objects.all()
+            if zonename != None:
+                queryset = queryset.filter(zone_name__contains = zonename)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
 #支持增删查改nameid的策略
-class NameidPolciyinfo(viewsets.ModelViewSet):
+class NameidPolciyinfo(MyModelViewSet):
     queryset = tb_fact_nameidpolicy_info.objects.all()
     serializer_class = NameidPolciySerializer
-#支持通过策略查找item
-class GetIdByPolicy(viewsets.ModelViewSet):
-    serializer_class = NameidPolciySerializer
-    def get_queryset(self):
-        obj = self.kwargs.get('policyname',None)
-        if obj is not None:
-            queryset = tb_fact_nameidpolicy_info.objects.filter(policy_name__contains = obj)
-        return queryset
+    #支持通过策略查找item
+    @action(detail=False,methods=['get'])
+    def universal_matching_nameidpolicy(self,request):
+        try:
+            policyname = request.GET.get('policyname')
+            queryset = tb_fact_nameidpolicy_info.objects.all()
+            if policyname != None:
+                queryset = queryset.filter(policy_name__contains = policyname)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
 
 #支持增删查改设备vip
-class VipDeviceinfo(viewsets.ModelViewSet):
+class VipDeviceinfo(MyModelViewSet):
     queryset = tb_fact_device_info.objects.all()
     serializer_class = VipDeviceSerializer
+    
+    @action(detail=False,methods=['get'])
+    def get_all_resource_info(self,request):
+         try:
+            nodeid = request.GET.get('nodeid')
+            ip = request.GET.get('ip')
+            queryset = tb_fact_device_info.objects.all()
+            if nodeid != None:
+                queryset = queryset.filter(node_id__contains=nodeid)
+            if ip != None:
+                queryset = queryset.filter(vip_address__contains=ip)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)
+         except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST) 
 
-#根据设备名字查找设备对应的id
-class GetIdByVipdev(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = VipDeviceSerializer
-    def get_queryset(self):
-        obj = self.kwargs.get('vipname', None)
-        if obj is not None:
-            queryset = tb_fact_device_info.objects.filter(vip_address = obj)
-        return queryset
-#根据节点id查找内容
-class GetIdByNodeName(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = VipDeviceSerializer
-    def get_queryset(self):
-        obj = self.kwargs.get('nodename', None)
-        if obj is not None:
-            queryset = tb_fact_device_info.objects.filter(node_id = obj)
-        return queryset
-#维护资源上下线的时候
-def MaintainResource(request):
-    try:
+    #维护资源上下线的时候
+    @action(detail=False,methods=['post'])
+    def maintain_resource(self,request):
         record_list = []
-        with transaction.atomic():            
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                status = querydic.get('status' or None)
-                resourceinfo = querydic.get('resourceinfo' or [])
-                resourcetype = querydic.get('resourcetype' or None)
-                resourceattributes = querydic.get('resourceattributes' or None)
-                if status not in ["enable","disable"]:
-                    return HttpResponse("")
-                if resourcetype == 'vip' and resourceattributes =='id':
-                    tb_fact_device_info.objects.filter(id__in=resourceinfo).update(vip_enable_switch=status)
-                    tb_fact_device_info.objects.filter(id__in=resourceinfo).update(vip_status=status) 
-                    record_list = tb_fact_device_info.objects.filter(id__in=resourceinfo)
-                if resourcetype == 'vip' and resourceattributes =='ip':
-                    tb_fact_device_info.objects.filter(vip_address__in=resourceinfo).update(vip_enable_switch=status)
-                    tb_fact_device_info.objects.filter(vip_address__in=resourceinfo).update(vip_status=status) 
-                if resourcetype == 'node':
-                    tb_fact_device_info.objects.filter(node_id__in=resourceinfo).update(vip_enable_switch=status) 
-                    tb_fact_device_info.objects.filter(node_id__in=resourceinfo).update(vip_status=status) 
-                    record_list = tb_fact_device_info.objects.filter(node_id__in=resourceinfo)
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)   
-#资源是否采用探测模块的数据,调整资源状态
-def AdjustResourceStatus(request):
-    try:
-        record_list = []
-        with transaction.atomic():            
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                detectstatus = querydic.get('detectstatus' or None)
-                artificialstatus = querydic.get('artificialstatus' or None)
+        try:
+            with transaction.atomic():            
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    paramsstatus = querydic.get('status' or None)
+                    resourceinfo = querydic.get('resourceinfo' or [])
+                    resourcetype = querydic.get('resourcetype' or None)
+                    resourceattributes = querydic.get('resourceattributes' or None)
+                    if paramsstatus not in ["enable","disable"]:
+                        return Response({'code':0,'msg':"status is err"},status=status.HTTP_400_BAD_REQUEST) 
+                    if resourcetype == 'vip' and resourceattributes =='id':
+                        tb_fact_device_info.objects.filter(id__in=resourceinfo).update(vip_enable_switch=paramsstatus)
+                        tb_fact_device_info.objects.filter(id__in=resourceinfo).update(vip_status=paramsstatus) 
+                    #    record_list = tb_fact_device_info.objects.filter(id__in=resourceinfo)
+                    if resourcetype == 'vip' and resourceattributes =='ip':
+                        tb_fact_device_info.objects.filter(vip_address__in=resourceinfo).update(vip_enable_switch=paramsstatus)
+                        tb_fact_device_info.objects.filter(vip_address__in=resourceinfo).update(vip_status=paramsstatus) 
+                    if resourcetype == 'node':
+                        tb_fact_device_info.objects.filter(node_id__in=resourceinfo).update(vip_enable_switch=paramsstatus) 
+                        tb_fact_device_info.objects.filter(node_id__in=resourceinfo).update(vip_status=paramsstatus) 
+                    #    record_list = tb_fact_device_info.objects.filter(node_id__in=resourceinfo)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'code':1,'msg':"update ok"},status=status.HTTP_200_OK)
 
-                resourceinfo = querydic.get('resourceinfo' or [])
-                resourcetype = querydic.get('resourcetype' or None)
-                if detectstatus not in ["enable","disable"] or artificialstatus not in ["enable","disable"]:
-                    return HttpResponse("")   
-                if resourcetype == 'vip':
-                    for devid in resourceinfo:
-                        tb_fact_device_info.objects.filter(id=devid).update(vip_enable_switch=detectstatus) 
-                        tb_fact_device_info.objects.filter(id=devid).update(vip_status=artificialstatus) 
-                        devobj = tb_fact_device_info.objects.filter(id=devid)
-                        record_list.append(devobj)
-                if resourcetype == 'node':
-                    for nodeid in resourceinfo:
-                        tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_enable_switch=detectstatus) 
-                        tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_status=artificialstatus) 
-                        devobj = tb_fact_device_info.objects.filter(node_id=nodeid)
-                        record_list.append(devobj)
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)   
+    #资源是否采用探测模块的数据,调整资源状态
+    @action(detail=False,methods=['post'])
+    def adjust_resource(self,request):
+        record_list = []
+        try:
+            with transaction.atomic():            
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    detectstatus = querydic.get('detectstatus' or None)
+                    artificialstatus = querydic.get('artificialstatus' or None)
+
+                    resourceinfo = querydic.get('resourceinfo' or [])
+                    resourcetype = querydic.get('resourcetype' or None)
+                    if detectstatus not in ["enable","disable"] or artificialstatus not in ["enable","disable"]:
+                        return Response({'code':0,'msg':"status is err"},status=status.HTTP_400_BAD_REQUEST) 
+                    if resourcetype == 'vip':
+                        for devid in resourceinfo:
+                            tb_fact_device_info.objects.filter(id=devid).update(vip_enable_switch=detectstatus) 
+                            tb_fact_device_info.objects.filter(id=devid).update(vip_status=artificialstatus) 
+                           # devobj = tb_fact_device_info.objects.filter(id=devid)
+                    if resourcetype == 'node':
+                        for nodeid in resourceinfo:
+                            tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_enable_switch=detectstatus) 
+                            tb_fact_device_info.objects.filter(node_id=nodeid).update(vip_status=artificialstatus) 
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'code':1,'msg':"update ok"},status=status.HTTP_200_OK)
    
-#删除资源
-def DelResource(request):
-    try:
-        with transaction.atomic():            
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                resourceinfo = querydic.get('resourceinfo' or [])
-                resourcetype = querydic.get('resourcetype' or None)
-                resourceattributes = querydic.get('resourceattributes' or None)
-                if resourcetype == 'vip' and resourceattributes =='id':
-                    tb_fact_device_info.objects.filter(id__in = resourceinfo).delete()   
-                if resourcetype == 'vip' and resourceattributes =='ip':
-                    tb_fact_device_info.objects.filter(vip_address__in = resourceinfo).delete()   
-                if resourcetype == 'node':
-                    tb_fact_device_info.objects.filter(node_id__in = resourceinfo).delete()   
-    except Exception as err:
-        print(err)
-    return HttpResponse("")   
+        #删除资源
+    @action(detail=False,methods=['post'])
+    def delete_resource(self,request):
+        try:
+            with transaction.atomic():            
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    resourceinfo = querydic.get('resourceinfo' or [])
+                    resourcetype = querydic.get('resourcetype' or None)
+                    resourceattributes = querydic.get('resourceattributes' or None)
+                    if resourcetype == 'vip' and resourceattributes =='id':
+                        tb_fact_device_info.objects.filter(id__in = resourceinfo).delete()   
+                    if resourcetype == 'vip' and resourceattributes =='ip':
+                        tb_fact_device_info.objects.filter(vip_address__in = resourceinfo).delete()   
+                    if resourcetype == 'node':
+                        tb_fact_device_info.objects.filter(node_id__in = resourceinfo).delete()   
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'code':1,'msg':"delete ok"},status=status.HTTP_200_OK)
                 
                 
      
                     
 #支持增删改查view
-class Viewtypeinfo(viewsets.ModelViewSet):
+class Viewtypeinfo(MyModelViewSet):
     queryset = tb_fact_viewtype_info.objects.all()
     serializer_class = ViewtypeSerializer
-class Viewinfo(viewsets.ModelViewSet):
+class Viewinfo(MyModelViewSet):
     queryset = tb_fact_temp_view_info.objects.all()
     serializer_class = ViewSerializer
-
-#支持输入father_id输出对应的内容
-class GetIdByFatherid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = ViewSerializer
-    def get_queryset(self):
-        obj = self.kwargs.get('fatherid', None)
-        if obj is not None:
-            queryset = tb_fact_temp_view_info.objects.filter(view_father_id = obj)
-        return queryset
-#为了前期更好的查询，提供的该接口，即输入view对应的中文名字输出对应的view_id
-class GetIdByViewInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = ViewSerializer
-    def get_queryset(self):
-        country = self.kwargs.get('country', None)
-        isp = self.kwargs.get('isp', None)
-        region = self.kwargs.get('region', None)
-        province = self.kwargs.get('province', None)
-        city = self.kwargs.get('city', None)
-        queryset = tb_fact_temp_view_info.objects.filter(Q(view_country__contains = country) & Q(view_isp__contains=isp) & Q(view_region__contains=region) & Q(view_province__contains=province) & Q(view_city__contains=city))
-        return queryset
+     
+    #通过关键字查找item
+    @action(detail=False,methods=['get'])
+    def get_child_region(self,request):
+        try:
+            fatherid = request.GET.get('fatherid')
+            country = request.GET.get('country', None)
+            isp = request.GET.get('isp', None)
+            region = request.GET.get('region', None)
+            province = request.GET.get('province', None)
+            city = request.GET.get('city', None)
+            queryset = tb_fact_temp_view_info.objects.all()
+            if fatherid != None:
+                queryset = queryset.filter(view_father_id = fatherid)
+            if country != None:
+                queryset = queryset.filter(view_country__contains = country)
+            if isp != None:
+                queryset = queryset.filter(view_isp__contains=isp)
+            if region != None:
+                queryset = queryset.filter(view_region__contains=region)
+            if province != None:
+                queryset = queryset.filter(view_province__contains=province)
+            if city != None:
+                queryset = queryset.filter(view_city__contains=city)
+            serializer = self.serializer_class(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
 
 #支持增删查改nameid
 class Nameidinfo(MyModelViewSet):
@@ -274,15 +301,9 @@ class Nameidinfo(MyModelViewSet):
     def universal_matching_nameid(self,request):
         try:
             nameid = request.GET.get('nameid')
-            queryset = tb_fact_nameid_info.objects.filter(nameid_name__contains = nameid)
-            serializer = self.get_serializer(queryset,many=True)
-            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
-        except Exception as err:
-            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
-    @action(detail=False,methods=['get'])
-    def get_all_nameid(self,request):
-        try:
             queryset = tb_fact_nameid_info.objects.all()
+            if nameid != None:
+                queryset = queryset.filter(nameid_name__contains = nameid) 
             serializer = self.get_serializer(queryset,many=True)
             return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
         except Exception as err:
@@ -299,6 +320,7 @@ class Nameidinfo(MyModelViewSet):
         except Exception as err:
             return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
     
+    @action(detail=False,methods=['get'])
     def get_nameid_from_qdnsconfig(self,request):  
         try:
             nameid = request.GET.get('nameid')   
@@ -335,8 +357,6 @@ class Nameidinfo(MyModelViewSet):
                             serializer = NameidViewSerializer(data={"nameid_id":newnameidobj,"nameid_view_id":objview.nameid_view_id_id,"nameid_resolve_type":objview.nameid_resolve_type,"nameid_max_ip":objview.nameid_max_ip,"nameid_preferred":objview.nameid_preferred,"nameid_status":objview.nameid_status,"nameid_ttl":objview.nameid_ttl})
                             if not serializer.is_valid():
                                 raise serializers.ValidationError
-                            else:
-                                record_list.append(serializer.data)
                         querysetviewdev = tb_dimension_nameid_view_device_info.objects.filter(nameid_id_id=nameid_id)
                         if querysetviewdev and len(querysetviewdev) !=0:
                             for objviewdev in querysetviewdev:
@@ -362,547 +382,418 @@ class Nameidinfo(MyModelViewSet):
         return Response({'code':1,'msg':record_list},status=status.HTTP_200_OK)
 
 #对域名和view之间的管理
-class NameidViewinfo(viewsets.ModelViewSet):
+class NameidViewinfo(MyModelViewSet):
     queryset = tb_dimension_nameid_view_info.objects.all()
     serializer_class = NameidViewSerializer
-#通过域名id和view id获取对应记录id
-class GetIdByNameidViewid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidViewListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        if nameid is not None and viewid is not None:
-            queryset = tb_dimension_nameid_view_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid))
-        return queryset
-#支持通过域名id查找该域名对应的所有的view信息
-class GetItemBynameid(mixins.ListModelMixin,viewsets.GenericViewSet):
-   # serializer_class = NameidViewSerializer
-    serializer_class = NameidViewListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        if nameid is not None:
-            queryset = tb_dimension_nameid_view_info.objects.filter(Q(nameid_id = nameid))
-        return queryset
-#删除 nameid view关系表的时候，需要同时删除nameidviewdevice表和nameidviewcname表中对应的view
-def NameidViewDelinfo(request):
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameid = querydic.get('nameid_id')
-                viewid = querydic.get('nameid_view_id')
+    @action(detail=False,methods=['get'])
+    def get_accurate_view_byquery(self,request):
+        try:
+            nameid = request.GET.get('nameid')
+            viewid = request.GET.get('viewid')
+            queryset = tb_dimension_nameid_view_info.objects.all()
+            if nameid != None:
+                queryset = queryset.filter(nameid_id = nameid)
+            if viewid != None:
+                queryset = queryset.filter(nameid_view_id=viewid)
+            serializer = NameidViewListSerializer(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    @action(methods=['delete'],detail=False)
+    def delete_relation_resource(self,request):
+        try:
+            with transaction.atomic():
+                nameid = request.GET.get('nameid')
+                viewid = request.GET.get('viewid')
                 tb_dimension_nameid_view_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=viewid)).delete()
                 tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=viewid)).delete()
                 tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=viewid)).delete()
-    except Exception as err:
-        print(err)
-        return HttpResponse("")    
-    return HttpResponse("")    
-
+                return Response({'code':1,'msg':"del ok"},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+    @action(detail=False,methods=['get'])
+    def get_info_by_nameid(self,request):
+        try: 
+            nameid = request.GET.get('nameid', None)
+            queryset = tb_dimension_nameid_view_info.objects.filter(Q(nameid_id = nameid)) 
+            serializer = NameidViewListSerializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+   
 #对域名view,设备之间的管理
-class NameidViewDeviceinfo(viewsets.ModelViewSet):
+class NameidViewDeviceinfo(MyModelViewSet):
     queryset = tb_dimension_nameid_view_device_info.objects.all()
-    serializer_class = NameidViewDeviceSerializer            
-#添加一系列view
-def NameidViewListDeviceinfo(request):
-    res_list = []
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-        #print(data)
-                nameid = querydic.get('nameid_id')
-                viewid = querydic.get('nameid_view_id')
-                devid = querydic.get('devid')
-               
-                #这里有待考虑，添加view以后,查出本view的元信息
-                viewinfourl = "http://127.0.0.1:8000/getidbynameview/{}/{}/".format(nameid,viewid)
-                viewinfores = urllib_get(viewinfourl)
-                viewinfodic = {}
-                #如果插入的vip所在的view不存在则进行创建
-                if viewinfores == None or len(viewinfores)==0:
-                    return HttpResponse(" ")
-                viewinfodic = json.loads(viewinfores)
-                if viewinfodic.get("results") == None or len(viewinfodic["results"])==0:
-                    viewurl = "http://127.0.0.1:8000/nameidview/"
-                    viewinfodic = {'nameid_id':nameid, 'nameid_view_id':viewid, 'nameid_resolve_type': 'a', 'nameid_max_ip': 3, 'nameid_preferred': 'rr', 'nameid_status': 'enable', 'nameid_ttl':120}
-                    viewres = urllib_post(viewurl,viewinfodic)
-                else: 
-                    viewinfodic = viewinfodic["results"][0]
-                if len(viewinfodic) == 0:
-                    return HttpResponse(" ")
-                #将本设备信息插入直接的name view device表中
-                data={"nameid_id":nameid,"nameid_view_id":viewid,"nameid_device_id":devid,"nameid_device_status":"enable","nameid_device_ratio":30}
-                url = "http://127.0.0.1:8000/nameidviewdevice/"
-                res = urllib_post(url,data)
-                res_list.append(res)
-                #将本设备插入它的父级view中
-                view_fatherid = querydic.get('viewfatherid')
-                if view_fatherid != None:
-                    for fatherid in view_fatherid:
-                        #将设备插入父级的name view device表中
-                        data["nameid_view_id"] = fatherid
-                        res = urllib_post(url,data)
-                        res_list.append(res)
-                        #将父级的view插入本域名的nameid view信息表中
-                        viewurl = "http://127.0.0.1:8000/nameidview/"
-                        viewdata = {"nameid_id":nameid,"nameid_view_id":fatherid,"nameid_resolve_type":viewinfodic.get("nameid_resolve_type"),"nameid_max_ip":viewinfodic.get("nameid_max_ip"),"nameid_preferred":viewinfodic.get("nameid_preferred"),"nameid_status":"enable","nameid_ttl":viewinfodic.get("nameid_ttl")}
-                        print(viewdata)
-                        viewres = urllib_post(viewurl,viewdata)
-    except Exception as err:
-        print(err)  
-    return HttpResponse(res_list)  
+    serializer_class = NameidViewDeviceSerializer  
+    #通过nodeid或者ip查找
+    @action(detail=False,methods=['get'])
+    def get_accurate_by_query(self,request):
+        try: 
+            nameid = request.GET.get('nameid', None)
+            viewid = request.GET.get('viewid', None)
+            nodeid = request.GET.get('nodeid', None)
+            ip = request.GET.get('ip', None)
+            queryset = tb_dimension_nameid_view_device_info.objects.all()
+            if nameid != None:
+                queryset = queryset.filter(nameid_id = nameid)
+            if viewid != None:
+                queryset = queryset.filter(nameid_view_id=viewid)
+            if nodeid != None:
+                queryset = queryset.filter(nameid_device_id__node_id=nodeid)
+            if ip != None:
+                queryset = queryset.filter(nameid_device_id__vip_address=ip)
+            serializer = NameidViewDeviceListSerializer(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
     
-#通过设备nodeid添加记录
-import json
-def NameidViewNodeidinfo(request):
-    try:
+    #通过nodeid和单台设备删除解析，对于nodeid的华传进来的是一系列的devid
+    @action(detail=False,methods=['post'])
+    def multiple_delete(self,request):
         with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameid = querydic.get('nameid_id')
-                viewid = querydic.get('nameid_view_id')
-                nodeid = querydic.get('nodeid')
-                viewinfourl = "http://127.0.0.1:8000/getidbynameview/{}/{}/".format(nameid,viewid)
-                viewinfores = urllib_get(viewinfourl)
-                if viewinfores == None:
-                    return HttpResponse(" ")
-                viewinfodic = json.loads(viewinfores)
-                viewinfodic = {}
-                if viewinfodic.get("results") == None or len(viewinfodic["results"])==0:
-                    viewurl = "http://127.0.0.1:8000/nameidview/"
-                    viewinfodic = {'nameid_id':nameid, 'nameid_view_id':viewid, 'nameid_resolve_type': 'a', 'nameid_max_ip': 3, 'nameid_preferred': 'rr', 'nameid_status': 'enable', 'nameid_ttl':120}
-                    viewres = urllib_post(viewurl,viewinfodic)
-                else: 
-                    viewinfodic = viewinfodic["results"][0]
-                if len(viewinfodic) == 0:
-                    return HttpResponse(" ")
-
-                record_list = []
-                 
-                queryset = tb_fact_device_info.objects.filter(node_id=nodeid)
-                print(queryset)
-                url = "http://127.0.0.1:8000/nameidviewdevice/"
-                if queryset != None and len(queryset) != 0:
-           
-                    for obj in queryset:
-                        data = {"nameid_id":nameid,"nameid_view_id":viewid,"nameid_device_id":obj.id,"nameid_device_status":"enable","nameid_device_ratio":30}
-                        print(data)
-                        res = urllib_post(url,data)
-                        record_list.append(res)
-                    view_fatherid = querydic.get('viewfatherid')
-                    if view_fatherid != None:
-                        for fatherid in view_fatherid:
-                            for obj in queryset:
-                                data = {"nameid_id":nameid,"nameid_view_id":fatherid,"nameid_device_id":obj.id,"nameid_device_status":"enable","nameid_device_ratio":30}
-                                print(data)
-                                res = urllib_post(url,data)
-                                record_list.append(res)
-
-                                viewurl = "http://127.0.0.1:8000/nameidview/"
-                                viewdata = {"nameid_id":nameid,"nameid_view_id":fatherid,"nameid_resolve_type":viewinfodic.get("nameid_resolve_type"),"nameid_max_ip":viewinfodic.get("nameid_max_ip"),"nameid_preferred":viewinfodic.get("nameid_preferred"),"nameid_status":"enable","nameid_ttl":viewinfodic.get("nameid_ttl")}
-                                print(viewdata)
-                                viewres = urllib_post(viewurl,viewdata)
-                        
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)    
-#批量添加ip,支持文本的方式
-def NameidViewDeviceMulLoadinfo(request):
-    try:
-        record_list = [] 
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameid = querydic.get('nameid_id')
-                viewid = querydic.get('nameid_view_id')
-                devidlist = querydic.get('devid_list')
-                queryset = tb_fact_device_info.objects.filter(vip_address__in = devidlist)
-                url = "http://127.0.0.1:8000/nameidviewdevice/"
-                for devid in queryset:
-                    data = {"nameid_id":nameid,"nameid_view_id":viewid,"nameid_device_id":devid.id,"nameid_device_status":"enable","nameid_device_ratio":1}
-                    res = urllib_post(url,data)
-                    record_list.append(res) 
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)    
-#批量添加ip,支持筛选的方式
-def NameidViewDeviceMulSelinfo(request):
-    try:
-        record_list = [] 
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameid = querydic.get('nameid_id')
-                viewid = querydic.get('nameid_view_id')
-                devidlist = querydic.get('devid_list')
-                url = "http://127.0.0.1:8000/nameidviewdevice/"
-                for devid in devidlist:
-                    data = {"nameid_id":nameid,"nameid_view_id":viewid,"nameid_device_id":devid,"nameid_device_status":"enable","nameid_device_ratio":1}
-                    res = urllib_post(url,data)
-                    record_list.append(res) 
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)  
-def NameidViewDeviceNodeMulSel(request):
-    record_list = []
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameid = querydic.get('nameid_id') or ""
-                viewid = querydic.get('nameid_view_id') or -1
-                ip = querydic.get('ip') or ""
-                if viewid == -1:
-                    queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id__nameid_name__contains=nameid) & Q(nameid_device_id__vip_address__contains=ip))
-                else:
-                    queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id__nameid_name__contains=nameid) & Q(nameid_view_id=viewid) & Q(nameid_device_id__vip_address__contains=ip))
-                print(queryset)
-                for obj in queryset:
-                    record_list.append({"id":obj.id,"nameid_name_id":obj.nameid_id_id,"nameid_name":str(obj.nameid_id),"nameid_view_id":obj.nameid_view_id_id,"nameid_device_id":obj.nameid_device_id_id,"nameid_device":str(obj.nameid_device_id),"nameid_device_ratio":str(obj.nameid_device_ratio),"nameid_device_status":str(obj.nameid_device_status)})
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list) 
-def NameidViewNodeMulSel(request):
-    record_list = []
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameid = querydic.get('nameid_id') or ""
-                viewid = querydic.get('nameid_view_id') or -1
-                nodeid = querydic.get('nodeid') or ""
-                if viewid == -1:
-                    sql = "SELECT `Polaris_tb_dimension_nameid_view_device_info`.`id`, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_id_id`,Polaris_tb_fact_nameid_info.nameid_name, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_view_id_id`, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_id_id`,`Polaris_tb_fact_device_info`.vip_address, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_ratio`, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_status` FROM `Polaris_tb_dimension_nameid_view_device_info` INNER JOIN `Polaris_tb_fact_nameid_info` ON (`Polaris_tb_dimension_nameid_view_device_info`.`nameid_id_id` = `Polaris_tb_fact_nameid_info`.`id`) INNER JOIN `Polaris_tb_fact_device_info` ON (`Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_id_id` = `Polaris_tb_fact_device_info`.`id`) where (Polaris_tb_fact_nameid_info.nameid_name like '%{}%' and Polaris_tb_fact_device_info.node_id = '{}') ORDER BY `Polaris_tb_dimension_nameid_view_device_info`.`id` ASC".format(nameid,nodeid)
-                else:
-                    sql = "SELECT `Polaris_tb_dimension_nameid_view_device_info`.`id`, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_id_id`,Polaris_tb_fact_nameid_info.nameid_name, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_view_id_id`, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_id_id`,`Polaris_tb_fact_device_info`.vip_address, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_ratio`, `Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_status` FROM `Polaris_tb_dimension_nameid_view_device_info` INNER JOIN `Polaris_tb_fact_nameid_info` ON (`Polaris_tb_dimension_nameid_view_device_info`.`nameid_id_id` = `Polaris_tb_fact_nameid_info`.`id`) INNER JOIN `Polaris_tb_fact_device_info` ON (`Polaris_tb_dimension_nameid_view_device_info`.`nameid_device_id_id` = `Polaris_tb_fact_device_info`.`id`) where (Polaris_tb_fact_nameid_info.nameid_name like '%{}%' and `Polaris_tb_dimension_nameid_view_device_info`.`nameid_view_id_id` = {} and Polaris_tb_fact_device_info.node_id = '{}') ORDER BY `Polaris_tb_dimension_nameid_view_device_info`.`id` ASC".format(nameid,viewid,nodeid)
-                res = my_custom_sql(sql)
-                if res != None and len(res) != 0:
-                    for item in res:
-                        record_list.append({"id":item[0],"nameid_name_id":item[1],"nameid_name":item[2],"nameid_view_id":item[3],"nameid_device_id":item[4],"nameid_device":item[5],"nameid_device_ratio":item[6],"nameid_device_status":item[7]})
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list) 
-#批量替换ip
-def NameidViewDeviceMulRepinfo(request):
-    record_list = []
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameidviewidlist = querydic.get('nameidviewidlist') or []
-                devidlist = querydic.get('devidlist') or []
-                idlist = querydic.get("idlist") or []
-                for item in nameidviewidlist:
-                    nameid = item[0]
-                    viewid = item[1]
-                    data = {"nameid_id":nameid,"nameid_view_id":viewid,"devid_list":devidlist}
-                    print(data)
-                    url = "http://127.0.0.1:8000/nameidviewdevice_mul_select/"
-                    res = urllib_post(url,data)
-                    record_list.append(res)
-                tb_dimension_nameid_view_device_info.objects.filter(id__in=idlist).delete()
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list) 
-    
-def NameidViewDeviceMulAppendinfo(request):
-    record_list = []
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameidviewidlist = querydic.get('nameidviewidlist') or []
-                devidlist = querydic.get('devidlist') or []
-                for item in nameidviewidlist:
-                    nameid = item[0]
-                    viewid = item[1]
-                    data = {"nameid_id":nameid,"nameid_view_id":viewid,"devid_list":devidlist}
-                    print(data)
-                    url = "http://127.0.0.1:8000/nameidviewdevice_mul_select/"
-                    res = urllib_post(url,data)
-                    record_list.append(res)
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list) 
-#按照id批量删除记录
-def NameidViewDeviceMulDelinfo(request):
-    record_list = []
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                idlist = querydic.get('idlist') or []
-            tb_dimension_nameid_view_device_info.objects.filter(id__in=idlist).delete()
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)
- 
-#通过nodeid删除指定view的资源
-def NameidViewNodeidDelinfo(request):
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                nameid = querydic.get('nameid_id')
-                viewid = querydic.get('nameid_view_id')
-                nodeid = querydic.get('nodeid')
-                queryset = tb_fact_device_info.objects.filter(node_id=nodeid)
-                print(queryset)
-                if queryset != None and len(queryset) != 0:
-                    for obj in queryset:
-                        tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=viewid) & Q(nameid_device_id=obj.id)).delete()
-    except Exception as err:
-        print(err)
-        return HttpResponse("")    
-    return HttpResponse("")    
- 
-
-#通过域名id,viewid和address获取记录
-
-class NameidViewAddress(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidViewDeviceListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        ip = self.kwargs.get('ip', None)
-        queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid) &  Q(nameid_device_id__vip_address=ip))
-        return queryset
-    
- 
-class NameidViewNodeid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidViewDeviceListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        nodeid = self.kwargs.get('nodeid', None)
-        queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid) &  Q(nameid_device_id__node_id=nodeid))
-        return queryset
-    
-#通过域名id和view id获取记录
-class GetDIdByNameidViewid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    #serializer_class = NameidViewDeviceSerializer
-    serializer_class = NameidViewDeviceListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        if nameid is not None and viewid is not None:
-            queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid))
-        return queryset
-#通过域名id和view id和设备id获取记录
-class GetIdByNameidViewidDeviceid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidViewDeviceListSerializer
-    #serializer_class = NameidViewDeviceSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        deviceid = self.kwargs.get('deviceid', None)
-        if nameid is not None and viewid is not None and deviceid is not None:
-            queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid) & Q(nameid_device_id = deviceid))
-        return queryset
-#通过域名id查找域名和设备信息
-class GetNameDevInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
-#    queryset = tb_dimension_nameid_view_device_info.objects.all()
-    serializer_class = NameidViewDeviceListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        if nameid is not None:
-            queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid))
-        return queryset
-#对cname记录的增删改查
-class CnameInfo(viewsets.ModelViewSet):
-    serializer_class = NameidCnameSerializer
-    queryset = tb_fact_cname_info.objects.all() 
-#支持按照操作员厂商以及业务的精准匹配
-class GetItemByOpSuBu(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidCnameSerializer
-    def get_queryset(self):
-        cname = self.kwargs.get('cname', None)
-        operator = self.kwargs.get('operator', None)
-        supplier = self.kwargs.get('supplier', None)
-        bussiness = self.kwargs.get('bussiness', None)
-        if operator is not None and supplier is not None and bussiness is not None:
-            queryset = tb_fact_cname_info.objects.filter(Q(nameid_cname__contains=cname) & Q(nameid_owner__contains=operator) & Q(nameid_supplier__contains=supplier) & Q(nameid_business__contains=bussiness))
-        return queryset
-#支持按照域名模糊匹配
-class GetIdByCname(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidCnameSerializer
-    def get_queryset(self):  
-        cname = self.kwargs.get('cname', None)
-        queryset = tb_fact_cname_info.objects.filter(nameid_cname__contains=cname)
-        return queryset
-         
-
-#对nameid view cname的管理
-class NameidViewCnameinfo(viewsets.ModelViewSet):
-    serializer_class = NameidViewCnameSerializer
-    queryset = tb_dimension_nameid_view_cname_info.objects.all()
-
-#通过域名id和view id获取记录
-class GetCIdByNameidViewid(mixins.ListModelMixin,viewsets.GenericViewSet):
-   # serializer_class = NameidViewCnameSerializer
-    serializer_class = NameidViewCnameListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        if nameid is not None and viewid is not None:
-            queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid))
-        return queryset
-#通过域名 id.view id cname id查找对应的记录
-class GetCIdByNameidViewidCnameid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidViewCnameSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        cnameid = self.kwargs.get('cnameid', None)
-        if nameid is not None and viewid is not None and cnameid is not None:
-            queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid) & Q(nameid_cname_id = cnameid))
-        return queryset
-#通过nameid,viewid.cname查找对应的信息
-class NameidViewCname(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = NameidViewCnameListSerializer
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        viewid = self.kwargs.get('viewid', None)
-        cname = self.kwargs.get('cname', None)
-        queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid) & Q(nameid_view_id=viewid) &  Q(nameid_cname_id__nameid_cname__contains=cname))
-        return queryset
-#通过域名查找配置的cname信息
-class GetNameCnameInfoByNameid(mixins.ListModelMixin,viewsets.GenericViewSet):
-    #queryset = tb_dimension_nameid_view_cname_info.objects.all()
-    serializer_class = NameidViewCnameListSerializer
-    #lookup_field = 'nameid_id'
-    def get_queryset(self):
-        nameid = self.kwargs.get('nameid', None)
-        if nameid is not None:
-            queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid))
-        return queryset
-def NameidViewListCnameinfo(request):
-    res_list = []
-    try:
-        with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-        #print(data)
-                nameid = querydic.get('nameid_id')
-                viewid = querydic.get('nameid_view_id')
-                cnameid = querydic.get('cnameid')
-               
-                #这里有待考虑，添加view以后,查出本view的元信息
-                viewinfourl = "http://127.0.0.1:8000/getidbynameview/{}/{}/".format(nameid,viewid)
-                viewinfores = urllib_get(viewinfourl)
-                viewinfodic = {}
-                #如果插入的vip所在的view不存在则进行创建
-                if viewinfores == None or len(viewinfores)==0:
-                    return HttpResponse(" ")
-                viewinfodic = json.loads(viewinfores)
-                if viewinfodic.get("results") == None or len(viewinfodic["results"])==0:
-                    viewurl = "http://127.0.0.1:8000/nameidview/"
-                    viewinfodic = {'nameid_id':nameid, 'nameid_view_id':viewid, 'nameid_resolve_type': 'cname', 'nameid_max_ip': 3, 'nameid_preferred': 'rr', 'nameid_status': 'enable', 'nameid_ttl':120}
-                    viewres = urllib_post(viewurl,viewinfodic)
-                else: 
-                    viewinfodic = viewinfodic["results"][0]
-                if len(viewinfodic) == 0:
-                    return HttpResponse(" ")
-                #将本设备信息插入直接的name view cname表中
-                data={"nameid_id":nameid,"nameid_view_id":viewid,"nameid_cname_id":cnameid,"nameid_cname_status":"enable","nameid_cname_ratio":30}
-                url = "http://127.0.0.1:8000/nameidviewcname/"
-                res = urllib_post(url,data)
-                res_list.append(res)
-                #将本设备插入它的父级view中
-                view_fatherid = querydic.get('viewfatherid')
-                if view_fatherid != None:
-                    for fatherid in view_fatherid:
-                        #将设备插入父级的name view cname表中
-                        data["nameid_view_id"] = fatherid
-                        res = urllib_post(url,data)
-                        res_list.append(res)
-                        #将父级的view插入本域名的nameid view信息表中
-                        viewurl = "http://127.0.0.1:8000/nameidview/"
-                        viewdata = {"nameid_id":nameid,"nameid_view_id":fatherid,"nameid_resolve_type":viewinfodic.get("nameid_resolve_type"),"nameid_max_ip":viewinfodic.get("nameid_max_ip"),"nameid_preferred":viewinfodic.get("nameid_preferred"),"nameid_status":"enable","nameid_ttl":viewinfodic.get("nameid_ttl")}
-                        print(viewdata)
-                        viewres = urllib_post(viewurl,viewdata)
-    except Exception as err:
-        print(err)  
-    return HttpResponse(res_list)  
-
-#对adminip的管理
-class AdminIpInfo(viewsets.ModelViewSet):
-    queryset = tb_fact_adminip_info.objects.all()
-    serializer_class = AdminIpSerializer
-class GetIdByAdminResourse(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = AdminIpSerializer
-    def get_queryset(self):
-        nodeid = self.kwargs.get('nodeid', None)
-        adminip = self.kwargs.get('adminip', None)
-        queryset = tb_fact_adminip_info.objects.filter(Q(node_id__contains = nodeid) & Q(admin_ip__contains=adminip))
-        return queryset
-class GetAdminIdByViewInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = AdminIpSerializer
-    def get_queryset(self):
-        isp = self.kwargs.get('isp', None)
-        region = self.kwargs.get('region', None)
-        province = self.kwargs.get('province', None)
-        queryset = tb_fact_adminip_info.objects.filter(Q(isp__contains=isp) & Q(region__contains=region) & Q(province__contains=province))
-        return queryset
-#修改探针的探测开关
-def DetectSwitch(request):
-    try:
+            try:
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    idlist = querydic.get('idlist') or []
+                    tb_dimension_nameid_view_device_info.objects.filter(id__in=idlist).delete()
+            except Exception as err:
+                return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'code':1,'msg':str("delok")},status=status.HTTP_200_OK)
+      
+   
+    #文本方式导入ip
+    @action(detail=False,methods=['post'])
+    def multiple_load_ip(self,request):
         record_list = []
         with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                resourceinfo = querydic.get('resourceinfo' or [])
-                switchtype = querydic.get('switchtype' or None)
-                status = querydic.get('status' or None)
-                if status not in ["enable","disable"]:
-                    return HttpResponse("")
-                if switchtype == "availability":
-                    tb_fact_adminip_info.objects.filter(id__in=resourceinfo).update(availability_status=status)
-                    record_list = tb_fact_adminip_info.objects.filter(id__in=resourceinfo)
-                if switchtype == "qos":
-                    tb_fact_adminip_info.objects.filter(id__in=resourceinfo).update(qos_status=status)
-                    record_list = tb_fact_adminip_info.objects.filter(id__in=resourceinfo)
-    except Exception as err:
-        print(err)
-    return HttpResponse(record_list)
+            try:
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    nameid = querydic.get('nameid')
+                    viewid = querydic.get('viewid')
+                    ipinfo = querydic.get('ipinfo')
+                    queryset = tb_fact_device_info.objects.filter(vip_address__in = ipinfo)
+                    for devid in queryset:
+                        serializer = NameidViewDeviceSerializer(data={"nameid_id":nameid,"nameid_view_id":viewid,"nameid_device_id":devid.id,"nameid_device_status":"enable","nameid_device_ratio":30})
+                        if not serializer.is_valid(raise_exception=False):
+                            raise serializers.ValidationError
+                        serializer.save()
+                        record_list.append(serializer.data)
+                    '''
+                    queryset = tb_dimension_nameid_view_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=viewid))
+                    if len(queryset) == 0:
+                        serializer = NameidViewSerializer(data={'nameid_id':nameid, 'nameid_view_id':viewid, 'nameid_resolve_type': 'a', 'nameid_max_ip': 3, 'nameid_preferred': 'rr', 'nameid_status': 'enable', 'nameid_ttl':120})
+                        if not serializer.is_valid():
+                            raise serializers.ValidationError
+                        serializer.save()
+                    '''             
+            except Exception as err:
+                return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'code':1,'msg':record_list},status=status.HTTP_200_OK) 
+        return Response({'code':0,'msg':"something err"},status=status.HTTP_400_BAD_REQUEST)
+    #添加一系列的view
+    @action(detail=False,methods=['post'])
+    def post_fatherview_devid(self,request):
+        record_list = []
+        try:
+            with transaction.atomic():
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    nameid = querydic.get('nameid')
+                    view_list = querydic.get('viewidinfo') or []
+                    devid_list = querydic.get('devidinfo') or []
+                    if devid_list == None or nameid == None or view_list == None or len(devid_list) == 0:
+                        return Response({'code':0,'msg':"the args is None"},status=status.HTTP_400_BAD_REQUEST)
+                
+                    for fatherid in view_list:
+                        queryset = tb_dimension_nameid_view_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=fatherid))
+                        if len(queryset) == 0:
+                            serializer = NameidViewSerializer(data={'nameid_id':nameid, 'nameid_view_id':fatherid, 'nameid_resolve_type': 'a', 'nameid_max_ip': 3, 'nameid_preferred': 'rr', 'nameid_status': 'enable', 'nameid_ttl':120})
+                            if not serializer.is_valid():
+                                raise serializers.ValidationError
+                            serializer.save()
+                        
+                        for devid in devid_list:
+                            queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=fatherid) & Q(nameid_device_id=devid))
+                            if len(queryset) == 0:
+                                serializer = NameidViewDeviceSerializer(data={"nameid_id":nameid,"nameid_view_id":fatherid,"nameid_device_id":devid,"nameid_device_status":"enable","nameid_device_ratio":30})
+                                if not serializer.is_valid(raise_exception=False):
+                                    raise serializers.ValidationError
+                                serializer.save()
+                                record_list.append(serializer.data)
+                        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+        return Response({'code':1,'msg':record_list},status=status.HTTP_200_OK)
 
-#删除探针
-def DelDetectResource(request):
-     try:
+    #批量工具入口
+    #查看所有的域名view设备详细信息
+    @action(detail=False,methods=['get'])
+    def get_all_resolve_info(self,request):
+        try:
+            nameid = request.GET.get('nameid')
+            viewid = request.GET.get('viewid')
+            ip = request.GET.get('ip') 
+            nodeid = request.GET.get('nodeid')
+            queryset = tb_dimension_nameid_view_device_info.objects.all() 
+            if nameid != None:
+                queryset = queryset.filter(nameid_id__nameid_name__contains=nameid)
+            if viewid != None:
+                queryset = queryset.filter(nameid_view_id=viewid)
+            if ip != None:
+                queryset = queryset.filter(nameid_device_id__vip_address__contains=ip)
+            if nodeid != None:
+                queryset = queryset.filter(nameid_device_id__node_id__contains=nodeid)
+            serializer = NameidViewDeviceListSerializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+        
+    #批量替换ip
+    @action(detail=False,methods=['post'])
+    def multiple_replace_ip(self,request):
+        record_list = []
         with transaction.atomic():
-            querydic = eval(request.body)
-            if querydic != None and len(querydic) !=0:
-                resourceinfo = querydic.get('resourceinfo' or [])
-                tb_fact_adminip_info.objects.filter(id__in=resourceinfo).delete()
-     except Exception as err:
-        print(err)
-     return HttpResponse("")
+            try:
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    delid = querydic.get('delid') or []
+                    replacedevid = querydic.get('replacedevid') or []
+                    nameidviewid = querydic.get('nameidviewid') or []
+                    for item in nameidviewid:
+                        nameid = item[0]
+                        viewid = item[1]
+                        for devid in replacedevid:
+                            serializer = NameidViewDeviceSerializer(data={"nameid_id":nameid,"nameid_view_id":viewid,"nameid_device_id":devid,"nameid_device_ratio":1,"nameid_device_status":"enable"})
+                            if not serializer.is_valid():
+                                raise serializers.ValidationError
+                            else:
+                                record_list.append(serializer.data)
+                    tb_dimension_nameid_view_device_info.objects.filter(id__in=delid).delete()
+            except Exception as err:
+                return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+            return Response({'code':1,'msg':record_list},status=status.HTTP_200_OK)
+ 
+    #追加ip
+    @action(detail=False,methods=['post'])
+    def multiple_append_ip(self,request):
+        record_list = []
+        with transaction.atomic():
+            try:
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    delid = querydic.get('delid') or []
+                    replacedevid = querydic.get('appenddevid') or []
+                    nameidviewid = querydic.get('nameidviewid') or [] 
+                    for item in nameidviewidlist:
+                        nameid = item[0]
+                        viewid = item[1]
+                        for devid in replacedevid:
+                            serializer = NameidViewDeviceSerializer(data={"nameid_id":nameid,"nameid_view_id":viewid,"nameid_device_id":devid,"nameid_device_ratio":1,"nameid_device_status":"enable"})
+                            if not serializer.is_valid():
+                                raise serializers.ValidationError
+                            else:
+                                record_list.append(serializer.data)
+            except Exception as err:
+                return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'code':1,'msg':record_list},status=status.HTTP_200_OK)
+    #通过域名id查找域名和设备信息
+    @action(detail=False,methods=['get'])
+    def get_info_by_nameid(self,request):
+        try: 
+            nameid = request.GET.get('nameid', None)
+            queryset = tb_dimension_nameid_view_device_info.objects.filter(Q(nameid_id = nameid)) 
+            serializer = NameidViewDeviceListSerializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+ 
+#对cname记录的增删改查
+class CnameInfo(MyModelViewSet):
+    serializer_class = NameidCnameSerializer
+    queryset = tb_fact_cname_info.objects.all() 
+
+
+    #支持按照操作员厂商以及业务的精准匹配
+    @action(detail=False,methods=['get'])
+    def get_third_resource_info(self,request):
+        try:
+            cname = request.GET.get('cname')
+            operator = request.GET.get('operator')
+            supplier = request.GET.get('supplier')
+            bussiness = request.GET.get('bussiness')
+            queryset = tb_fact_cname_info.objects.all()
+            if cname != None:
+                queryset = queryset.filter(nameid_cname__contains=cname)
+            if operator != None:
+                queryset = queryset.filter(nameid_owner__contains=operator)
+            if supplier != None:
+                queryset = queryset.filter(nameid_supplier__contains=supplier)
+            if bussiness != None:
+                queryset = queryset.filter(nameid_business__contains=bussiness)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+
+#对nameid view cname的管理
+class NameidViewCnameinfo(MyModelViewSet):
+    serializer_class = NameidViewCnameSerializer
+    queryset = tb_dimension_nameid_view_cname_info.objects.all()
+    #通过cname查找
+    @action(detail=False,methods=['get'])
+    def get_accurate_by_query(self,request):
+        try:
+            nameid = request.GET.get('nameid', None)
+            viewid = request.GET.get('viewid', None)
+            cname = request.GET.get('cname', None)
+            queryset = tb_dimension_nameid_view_cname_info.objects.all()
+            if nameid != None:
+                queryset = queryset.filter(nameid_id = nameid)
+            if viewid != None:
+                queryset = queryset.filter(nameid_view_id=viewid)
+            if cname != None:
+                queryset = queryset.filter(nameid_cname_id__nameid_cname__contains=cname)
+            serializer = NameidViewCnameListSerializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+    #添加view
+    @action(detail=False,methods=['post'])
+    def post_fatherview_cnameid(self,request):
+        record_list = []
+        try:
+            with transaction.atomic():
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    nameid = querydic.get('nameid')
+                    view_list = querydic.get('viewidinfo') or []
+                    cname_list = querydic.get('cnameinfo') or []
+                    if cname_list == None or nameid == None or view_list == None or len(cname_list) == 0:
+                        return Response({'code':0,'msg':"the args is None"},status=status.HTTP_400_BAD_REQUEST)
+                #添加viewid
+                    for fatherid in view_list:
+                        queryset = tb_dimension_nameid_view_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=fatherid))
+                        if len(queryset) == 0:
+                            serializer = NameidViewSerializer(data={'nameid_id':nameid, 'nameid_view_id':fatherid, 'nameid_resolve_type': 'a', 'nameid_max_ip': 3, 'nameid_preferred': 'rr','nameid_status': 'enable', 'nameid_ttl':120})
+                            if not serializer.is_valid():
+                                raise serializers.ValidationError
+                            serializer.save()
+                        for cnameid in cname_list:
+                            queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id=nameid) & Q(nameid_view_id=fatherid) & Q(nameid_cname_id=cnameid))
+                            if len(queryset) == 0:
+                                serializer = NameidViewCnameSerializer(data={"nameid_id":nameid,"nameid_view_id":fatherid,"nameid_cname_id":cnameid,"nameid_cname_status":"enable","nameid_cname_ratio":30})
+                                if not serializer.is_valid(raise_exception=False):
+                                    raise serializers.ValidationError
+                                serializer.save()
+                                record_list.append(serializer.data)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'code':1,'msg':record_list},status=status.HTTP_200_OK) 
+    @action(detail=False,methods=['get'])
+    def get_info_by_nameid(self,request):
+        try: 
+            nameid = request.GET.get('nameid', None)
+            queryset = tb_dimension_nameid_view_cname_info.objects.filter(Q(nameid_id = nameid)) 
+            serializer = NameidViewCnameListSerializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)        
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)        
+
+#对adminip的管理
+class AdminIpInfo(MyModelViewSet):
+    queryset = tb_fact_adminip_info.objects.all()
+    serializer_class = AdminIpSerializer
+  
+    @action(detail=False,methods=['get'])
+    def get_all_adminip(self,request):
+         try:
+            nodeid = request.GET.get('nodeid')
+            adminip = request.GET.get('adminip')
+            isp = request.GET.get('isp')
+            region = request.GET.get('region', None)
+            province = request.GET.get('province', None)
+            queryset = tb_fact_adminip_info.objects.all()
+            if nodeid != None:
+                queryset = queryset.filter(node_id__contains=nodeid)
+            if adminip != None:
+                queryset = queryset.filter(admin_ip__contains=ip)
+            if isp != None:
+                queryset = queryset.filter(isp__contains=isp)
+            if region != None:
+                queryset = queryset.filter(region__contains=region)
+            if province != None:
+                queryset = queryset.filter(province__contains=province)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({'code':1,'msg':serializer.data},status=status.HTTP_200_OK)
+         except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)  
+
+    #修改探针的探测开关
+    @action(detail=False,methods=['post'])
+    def adjuts_detect_switch(self,request):
+        with transaction.atomic():
+            try:
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    resourceinfo = querydic.get('resourceinfo' or [])
+                    switchtype = querydic.get('switchtype' or None)
+                    paramstatus = querydic.get('status' or None)
+                    if paramstatus not in ["enable","disable"]:
+                        return Response({'code':0,'msg':"status is err"},status=status.HTTP_400_BAD_REQUEST)
+                    if switchtype == "availability":
+                        tb_fact_adminip_info.objects.filter(id__in=resourceinfo).update(availability_status=paramstatus)
+                    if switchtype == "qos":
+                        tb_fact_adminip_info.objects.filter(id__in=resourceinfo).update(qos_status=paramstatus)
+            except Exception as err:
+                return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'code':1,'msg':"update ok"},status=status.HTTP_200_OK)
+    #删除探针
+    @action(detail=False,methods=['post'])
+    def delete_detect_resource(self,request):
+        with transaction.atomic():
+            try:
+                querydic = eval(request.body)
+                if querydic != None and len(querydic) !=0:
+                    resourceinfo = querydic.get('resourceinfo' or [])
+                    tb_fact_adminip_info.objects.filter(id__in=resourceinfo).delete()
+            except Exception as err:
+                return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'code':1,'msg':"del ok"},status=status.HTTP_200_OK)
 
 #对探测任务的管理
-class DetectTaskInfo(viewsets.ModelViewSet):
+class DetectTaskInfo(MyModelViewSet):
     queryset = tb_fact_detecttask_info.objects.all()
     serializer_class = DetectTaskSerializer
-#通过探测任务查找id 
-class GetIdByTaskInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = DetectTaskSerializer
-    def get_queryset(self):
-        taskname = self.kwargs.get('taskname', None)
-        queryset = tb_fact_detecttask_info.objects.filter(detect_name__contains=taskname)
-        return queryset
+    
+    @action(detail=False,methods=['get'])    
+    def universal_matching_taskname(self,request):
+        try:            
+            taskname = request.GET.get('taskname')           
+            queryset = tb_fact_detecttask_info.objects.all()
+            if taskname != None:
+                queryset = queryset.filter(detect_name__contains=taskname)
+            serializer = self.serializer_class(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
 
 #对探测数据标准的管理
-class DetectDeviceAvailabilityStandardInfo(viewsets.ModelViewSet):
+class DetectDeviceAvailabilityStandardInfo(MyModelViewSet):
     queryset = tb_fact_detectdeviceavailability_standard_info.objects.all()
     serializer_class = DetectDeviceAvailabilityStandardSerializer
-
-#通过运营商查找id 
-class GetIdByStandardInfo(mixins.ListModelMixin,viewsets.GenericViewSet):
-    serializer_class = DetectDeviceAvailabilityStandardSerializer
-    def get_queryset(self):
-        standard = self.kwargs.get('standard', None)
-        queryset = tb_fact_detectdeviceavailability_standard_info.objects.filter(node_isp=standard)
-        return queryset
+    @action(detail=False,methods=['get'])    
+    def universal_matching_standard(self,request):
+        try:            
+            standard = request.GET.get('standard')           
+            queryset = tb_fact_detectdeviceavailability_standard_info.objects.all()
+            if standard != None:
+                queryset = queryset.filter(node_isp__contains=standard)
+            serializer = self.serializer_class(queryset,many=True)
+            return Response({'code':1,'msg': serializer.data},status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({'code':0,'msg':str(err)},status=status.HTTP_400_BAD_REQUEST)
+    
 #上传设备可用性的源数据
 #class DetectDeviceAvailabilityInfo(viewsets.ModelViewSet):
 #    queryset = tb_fact_detectdeviceavailability_info.objects.all()
