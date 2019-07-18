@@ -8,6 +8,38 @@ import json
 
 def load_zone_from_table():
     zoneqdns_dict = {}
+    sql = 'select zone_name,record_name,record_content,internet_type,record_type,record_ttl,dns_name from Polaris_tb_fact_backend_dnszone_info left join Polaris_tb_fact_zonetype_info on Polaris_tb_fact_backend_dnszone_info.zone_name_id = Polaris_tb_fact_zonetype_info.id left join Polaris_tb_fact_dnstype_info on Polaris_tb_fact_backend_dnszone_info.dns_type_id = Polaris_tb_fact_dnstype_info.id where zone_status = "enable"'
+    zoneres = my_custom_sql(sql)
+    if zoneres != None and len(zoneres) !=0:
+        zonename_tag = False
+        for zoneitem in zoneres:
+            zone_name = zoneitem[0]
+            record_name = zoneitem[1]
+            record_content = zoneitem[2]
+            internet_type = zoneitem[3]
+            record_type = zoneitem[4]
+            record_ttl = zoneitem[5]
+            dnsname = zoneitem[6]
+            if zoneqdns_dict.get(dnsname) == None:
+                zoneqdns_dict[dnsname] = {}
+            if zoneqdns_dict[dnsname].get(zone_name) == None:
+                zoneqdns_dict[dnsname][zone_name] = []
+            zoneqdns_dict[dnsname][zone_name].append({"record_name":record_name,"record_content":record_content,"internet_type":internet_type,"record_type":record_type,"record_ttl":record_ttl})
+          #  zoneqdns_dict[dnsname][zone_name].append("{} {} {} {} {}\n".format(record_name,record_ttl,internet_type,record_type,record_content))
+    if len(zoneqdns_dict) == 0:
+        logger.info("the zone dict is null")
+    keys = get_keys_from_cache("vipdevice","zone-config")
+    for key in keys:
+        key = str(key,encoding = "raw_unicode_escape")
+        if zoneqdns_dict.get(key) == None:
+            logger.info("the nameid {} is disable".format(key))
+            delete_to_cache_cluster("vipdevice","zone-config",key) 
+    for dnstype,zoneinfo in zoneqdns_dict.items():
+        logger.info("the dnstype is {},the zone info is {}".format(dnstype,json.dumps(zoneinfo)))
+        write_to_cache_cluster("vipdevice","zone-config",str(dnstype),json.dumps(zoneinfo))
+
+def sload_zone_from_table():
+    zoneqdns_dict = {}
     objs = tb_fact_nameid_info.objects.all()
     for obj in objs:
          nameid = obj.nameid_name
@@ -20,7 +52,7 @@ def load_zone_from_table():
              for item in res:
                  id = item[0]
                  dnsname = item[1]
-                 sql = 'select zone_name,record_name,record_content,internet_type,record_type,record_ttl from Polaris_tb_fact_dnszone_info where dns_type_id = "{}"'.format(id)
+                 sql = 'select zone_name,record_name,record_content,internet_type,record_type,record_ttl from Polaris_tb_fact_dnszone_info left join Polaris_tb_fact_zonetype_info on Polaris_tb_fact_dnszone_info.zone_name_id = Polaris_tb_fact_zonetype_info.id where zone_status = "enable" and dns_type_id = "{}"'.format(id)
                  zoneres = my_custom_sql(sql)
                  if zoneres != None and len(zoneres) !=0:
                      zonename_tag = False

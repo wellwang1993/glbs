@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from Polaris.models import tb_fact_dnszone_info,tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info,tb_fact_temp_view_info,tb_fact_dnsip_info
+from Polaris.models import tb_fact_dnszone_info,tb_fact_nameid_info,tb_fact_dnstype_info,tb_fact_nameidpolicy_info,tb_fact_viewtype_info,tb_dimension_nameid_view_info,tb_dimension_nameid_view_device_info,tb_fact_device_info,tb_dimension_nameid_view_cname_info,tb_fact_cname_info,tb_fact_adminip_info,tb_fact_detecttask_info,tb_fact_detectdeviceavailability_info,tb_fact_detectdeviceavailability_standard_info,tb_fact_temp_view_info,tb_fact_dnsip_info,tb_fact_detectdeviceavailability_select_info,tb_fact_zonetype_info,tb_fact_user_info,tb_fact_backend_dnszone_info,tb_dimension_backend_nameid_view_device_info,tb_dimension_backend_nameid_view_cname_info
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_user_info
+        fields = '__all__'
+    
 class DnstypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnstype_info
@@ -13,21 +18,25 @@ class NameidPolciySerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_nameidpolicy_info
         fields = '__all__'
+class ZonetypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_zonetype_info
+        fields = '__all__'
 
 #对nameid的序列化
 #如果使用该类的话，则在上传zone内容的时候需要手写zone的内容
 class NameidDnsRelationinfo(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnstype_info
-        fields = ['dns_name'] 
+        fields = ['id','dns_name'] 
 class NameidPolicyRelationinfo(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_nameidpolicy_info
-        fields = ['policy_name']
+        fields = ['id','policy_name']
 class NameidZoneRelationinfo(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnszone_info
-        fields = ['zone_name']
+        fields = ['id','zone_name']
 class NameidListSerializer(serializers.ModelSerializer):
     #只展示关键的字段既可以
     zone_type = NameidZoneRelationinfo()
@@ -58,18 +67,35 @@ class DnsIpListSerializer(serializers.ModelSerializer):
         model = tb_fact_dnsip_info
         fields = '__all__'
 class DnsIpUpdateSerializer(serializers.ModelSerializer):
+    dns_ip = serializers.CharField()
+    def validate_dns_ip(self,dns_ip):
+        pat_ip = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+        if not pat_ip.match(dns_ip):
+            raise serializers.ValidationError("ip格式不对")
+        return dns_ip
     class Meta:
         model = tb_fact_dnsip_info
         fields = '__all__'
 #对dnszone的管理
 class DnszoneListSerializer(serializers.ModelSerializer):
     dns_type = NameidDnsRelationinfo()
+    zone_name = NameidZoneRelationinfo()
     class Meta:
         model = tb_fact_dnszone_info
         fields = '__all__'
 class DnszoneUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_dnszone_info
+        fields = '__all__'
+class DnszoneListBackendSerializer(serializers.ModelSerializer):
+    dns_type = NameidDnsRelationinfo()
+    zone_name = NameidZoneRelationinfo()
+    class Meta:
+        model = tb_fact_backend_dnszone_info
+        fields = '__all__'
+class DnszoneUpdateBackendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_backend_dnszone_info
         fields = '__all__'
 #view相关的序列化
 class ViewtypeSerializer(serializers.ModelSerializer):
@@ -82,6 +108,12 @@ class ViewSerializer(serializers.ModelSerializer):
         fields = '__all__'
 #虚拟设备的序列化
 class VipDeviceSerializer(serializers.ModelSerializer):
+    vip_address = serializers.CharField()
+    def validate_vip_address(self,vip_address):
+        pat_ip = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+        if not pat_ip.match(vip_address):
+            raise serializers.ValidationError("ip格式不对")
+        return vip_address
     class Meta:
         model = tb_fact_device_info
         fields = '__all__'
@@ -101,6 +133,10 @@ class NameidViewSerializer(serializers.ModelSerializer):
 class NameidViewDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_device_info
+        fields = '__all__' 
+class NameidViewDeviceBackendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_dimension_backend_nameid_view_device_info
         fields = '__all__' 
 #为内部使用的序列化接口，支持筛选nameid对应的view和设备信息
 class PartNameidSerializer(serializers.ModelSerializer):
@@ -129,19 +165,33 @@ class NameidViewDeviceListSerializer(serializers.ModelSerializer):
     nameid_id = PartNameidSerializer()
     class Meta:
         model = tb_dimension_nameid_view_device_info
-        fields = ['id','nameid_id','nameid_view_id','nameid_device_id','nameid_device_ratio'] 
+        fields = ['id','nameid_id','nameid_view_id','nameid_device_id','nameid_device_ratio','nameid_device_status'] 
+class NameidViewDeviceBackendListSerializer(serializers.ModelSerializer):
+    nameid_view_id = PartViewSerializer()
+    nameid_device_id = PartVipDeviceSerializer()
+    nameid_id = PartNameidSerializer()
+    class Meta:
+        model = tb_dimension_backend_nameid_view_device_info
+        fields = ['id','nameid_id','nameid_view_id','nameid_device_id','nameid_device_ratio','nameid_device_status'] 
 #为内部使用的序列化接口，支持筛选nameid对应的view和cname信息
 class PartNameidCnameSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_cname_info
-        fields = ['nameid_cname']
+        fields = ['id','nameid_cname']
 class NameidViewCnameListSerializer(serializers.ModelSerializer):
     nameid_id = PartNameidSerializer()
     nameid_view_id = PartViewSerializer()
     nameid_cname_id = PartNameidCnameSerializer()
     class Meta:
         model = tb_dimension_nameid_view_cname_info
-        fields = ['id','nameid_id','nameid_view_id','nameid_cname_id','nameid_cname_ratio']
+        fields = ['id','nameid_id','nameid_view_id','nameid_cname_id','nameid_cname_ratio','nameid_cname_status']
+class NameidViewCnameBackendListSerializer(serializers.ModelSerializer):
+    nameid_id = PartNameidSerializer()
+    nameid_view_id = PartViewSerializer()
+    nameid_cname_id = PartNameidCnameSerializer()
+    class Meta:
+        model = tb_dimension_backend_nameid_view_cname_info
+        fields = ['id','nameid_id','nameid_view_id','nameid_cname_id','nameid_cname_ratio','nameid_cname_status']
 
 #cname的序列化
 class NameidCnameSerializer(serializers.ModelSerializer):
@@ -159,9 +209,19 @@ class NameidViewCnameSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_dimension_nameid_view_cname_info
         fields = '__all__'
+class NameidViewCnameBackendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_dimension_backend_nameid_view_cname_info
+        fields = '__all__'
 
 #node和admin的对应关系
 class AdminIpSerializer(serializers.ModelSerializer):
+    admin_ip = serializers.CharField()
+    def validate_admin_ip(self,admin_ip):
+        pat_ip = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+        if not pat_ip.match(admin_ip):
+            raise serializers.ValidationError("ip格式不对")
+        return admin_ip
     class Meta:
         model = tb_fact_adminip_info
         fields = '__all__'
@@ -174,6 +234,11 @@ class DetectDeviceAvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_detectdeviceavailability_info
         fields = '__all__'
+class DetectDeviceAvailabilitySelectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tb_fact_detectdeviceavailability_select_info
+        fields = '__all__'
+    
 class DetectDeviceAvailabilityStandardSerializer(serializers.ModelSerializer):
     class Meta:
         model = tb_fact_detectdeviceavailability_standard_info

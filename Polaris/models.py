@@ -28,13 +28,57 @@ class tb_fact_dnsip_info(models.Model):
         def __str__(self):
             return self.dns_ip
 
+class tb_fact_zonetype_info(models.Model):
+        status_choice = (
+        ('enable','enable'),
+        ('disable','disable'),
+        )
+        zone_name = models.CharField(max_length = 150,unique=True)
+        zone_status = models.CharField(max_length = 256,choices=status_choice)
+        zone_describe = models.CharField(max_length = 256)
+        def __str__(self):
+            return self.zone_name
+
 #存储zone类型的，dns_type作为外键 
 class tb_fact_dnszone_info(models.Model):
-        internet_type = models.CharField(max_length = 256) 
-        record_type = models.CharField(max_length = 256)
+        rt_choice = (
+        ('SOA','SOA'),
+        ('A','A'),
+        ('AAAA','AAAA'),
+        ('CNAME','CNAME'),
+        ('NS','NS'),
+        )
+        it_choice = (
+        ('IN','IN'),
+        )
+        internet_type = models.CharField(max_length = 256,choices=it_choice) 
+        record_type = models.CharField(max_length = 256,choices=rt_choice)
         dns_type = models.ForeignKey('tb_fact_dnstype_info',on_delete=models.CASCADE)
         record_content = models.CharField(max_length = 256)
-        zone_name = models.CharField(max_length = 256)
+        zone_name = models.ForeignKey('tb_fact_zonetype_info',on_delete=models.CASCADE)    
+      #  zone_name = models.CharField(max_length = 256)
+        record_name = models.CharField(max_length = 256)
+        record_ttl = models.IntegerField(default=120)
+        def __str__(self):
+            return self.zone_name
+
+class tb_fact_backend_dnszone_info(models.Model):
+        rt_choice = (
+        ('SOA','SOA'),
+        ('A','A'),
+        ('AAAA','AAAA'),
+        ('CNAME','CNAME'),
+        ('NS','NS'),
+        )
+        it_choice = (
+        ('IN','IN'),
+        )
+        internet_type = models.CharField(max_length = 256,choices=it_choice) 
+        record_type = models.CharField(max_length = 256,choices=rt_choice)
+        dns_type = models.ForeignKey('tb_fact_dnstype_info',on_delete=models.CASCADE)
+        record_content = models.CharField(max_length = 256)
+        zone_name = models.ForeignKey('tb_fact_zonetype_info',on_delete=models.CASCADE)    
+      #  zone_name = models.CharField(max_length = 256)
         record_name = models.CharField(max_length = 256)
         record_ttl = models.IntegerField(default=120)
         def __str__(self):
@@ -57,12 +101,27 @@ class tb_fact_nameid_info(models.Model):
         ('disable','disable'),
         )
         nameid_name = models.CharField(max_length = 254,unique=True)
-        zone_type = models.ForeignKey('tb_fact_dnszone_info',on_delete=models.CASCADE,default='')
+        zone_type = models.ForeignKey('tb_fact_zonetype_info',on_delete=models.CASCADE)
         dns_type = models.ForeignKey('tb_fact_dnstype_info',on_delete=models.CASCADE)
         nameid_status = models.CharField(max_length = 256,choices=status_choice) 
         nameid_policy = models.ForeignKey('tb_fact_nameidpolicy_info',on_delete=models.CASCADE)
         def __str__(self):
             return self.nameid_name
+'''
+class tb_fact_nameid_infos(models.Model):
+        status_choice = (
+        ('enable','enable'),
+        ('disable','disable'),
+        )
+        nameid_name = models.CharField(max_length = 254,unique=True)
+        zone_type = models.ForeignKey('tb_fact_zonetype_info',on_delete=models.CASCADE)
+        #zone_type = models.ForeignKey('tb_fact_dnszone_info',on_delete=models.CASCADE,default='')
+        dns_type = models.ForeignKey('tb_fact_dnstype_info',on_delete=models.CASCADE)
+        nameid_status = models.CharField(max_length = 256,choices=status_choice) 
+        nameid_policy = models.ForeignKey('tb_fact_nameidpolicy_info',on_delete=models.CASCADE)
+        def __str__(self):
+            return self.nameid_name
+'''
 #对view的管理
 #view级别的,增加这张表用于支持不同的地址库，比如将来有新的地址库接入进来，那他们view应该是完全不同的
 class tb_fact_viewtype_info(models.Model):
@@ -178,6 +237,19 @@ class tb_dimension_nameid_view_device_info(models.Model):
        # def __str__(self):
        #     return json.dumps({"nameid_id":self.nameid_id,"nameid_view_id":self.nameid_view_id,"nameid_device_id":self.nameid_device_id,"nameid_device_ratio":self.nameid_device_ratio,"nameid_device_status":self.nameid_device_status})
            # return "{}_{}_{}".format(self.nameid_id,self.nameid_view_id,self.nameid_device_id)
+class tb_dimension_backend_nameid_view_device_info(models.Model):
+        status_choice = (
+        ('enable','enable'),
+        ('disable','disable'),
+        )
+        nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
+        nameid_view_id = models.ForeignKey('tb_fact_temp_view_info',on_delete=models.CASCADE)	
+        nameid_device_id = models.ForeignKey('tb_fact_device_info',on_delete=models.CASCADE)
+        nameid_device_ratio = models.IntegerField(default = 1)
+        nameid_device_status = models.CharField(max_length = 256,choices=status_choice)
+        class Meta:
+            ordering = ['id']
+            unique_together = ('nameid_id','nameid_view_id','nameid_device_id')
 #cname信息
 class tb_fact_cname_info(models.Model):
         nameid_cname = models.CharField(max_length = 250,unique=True)
@@ -201,7 +273,20 @@ class tb_dimension_nameid_view_cname_info(models.Model):
             unique_together = ('nameid_id','nameid_view_id','nameid_cname_id')
         def __str__(self):
             return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_cname_id)
-
+class tb_dimension_backend_nameid_view_cname_info(models.Model):
+        status_choice = (
+        ('enable','enable'),
+        ('disable','disable'),
+        )
+        nameid_id = models.ForeignKey('tb_fact_nameid_info',on_delete=models.CASCADE)
+        nameid_view_id = models.ForeignKey('tb_fact_temp_view_info',on_delete=models.CASCADE)	
+        nameid_cname_id = models.ForeignKey('tb_fact_cname_info',on_delete=models.CASCADE)
+        nameid_cname_ratio = models.IntegerField(default = 1)
+        nameid_cname_status = models.CharField(max_length = 256,choices=status_choice)
+        class Meta:
+            unique_together = ('nameid_id','nameid_view_id','nameid_cname_id')
+        def __str__(self):
+            return "{}-{}-{}".format(self.nameid_id,self.nameid_view_id,self.nameid_cname_id)
 #node和adminip的对应关系。用于设备探测
 class tb_fact_adminip_info(models.Model):
         status_choice = (
@@ -229,7 +314,7 @@ class tb_fact_detecttask_info(models.Model):
         ('week','week'),
         ('month','month'),
         )
-        detect_name = models.CharField(max_length = 256)
+        detect_name = models.CharField(max_length = 150,unique=True)
         detect_frency = models.IntegerField()
         detect_frency_unit = models.CharField(max_length = 256,choices=unit_choice,default='second')
         effective_time = models.IntegerField(default=15)
@@ -245,9 +330,19 @@ class tb_fact_detectdeviceavailability_info(models.Model):
         availability = models.CharField(max_length = 256,choices=status_choice)
         admin_isp = models.CharField(max_length = 256,default='0')
         create_time = models.DateTimeField(auto_now = True)
+class tb_fact_detectdeviceavailability_select_info(models.Model):
+        status_choice = (
+        ('enable','enable'),
+        ('disable','disable'),
+        )
+        admin_ip = models.CharField(max_length = 256)
+        vip_address  = models.CharField(max_length = 256)
+        availability = models.CharField(max_length = 256,choices=status_choice)
+        admin_isp = models.CharField(max_length = 256,default='0')
+        create_time = models.DateTimeField(auto_now = True)
 #针对设备可用性的探测数据，该表是这些数据是否有效的描述，是一个标准
 class tb_fact_detectdeviceavailability_standard_info(models.Model):
-        node_isp = models.CharField(max_length = 256)
+        node_isp = models.CharField(max_length = 150,unique=True)
         total_value = models.IntegerField()
         absolute_value = models.IntegerField()
         relative_rate = models.FloatField(default=0.0)
@@ -278,3 +373,8 @@ class tb_fact_ipset_info(models.Model):
         view_id = models.ForeignKey('tb_fact_temp_view_info',on_delete=models.CASCADE) 
         start_address = models.CharField(max_length = 256)
         end_address = models.CharField(max_length = 256)
+class tb_fact_user_info(models.Model):
+        username = models.CharField(max_length = 256)
+        password = models.CharField(max_length = 256)
+        uuid = models.CharField(max_length = 256)
+        captcha = models.IntegerField(default=120)

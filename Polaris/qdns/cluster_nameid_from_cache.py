@@ -8,7 +8,7 @@ def cluster_nameid_from_cache():
     objs = tb_fact_nameid_info.objects.all()
     dnstype_nameidinfo = {}
     for obj in objs:
-        if obj.nameid_name is not None and obj.nameid_policy is not None:
+        if obj.nameid_status == "enable" and obj.nameid_name is not None and obj.nameid_policy is not None:
             policy = str(obj.nameid_policy)
             nameid_str = read_from_cache_cluster("vipdevice",policy,obj.nameid_name)
             if nameid_str != None:

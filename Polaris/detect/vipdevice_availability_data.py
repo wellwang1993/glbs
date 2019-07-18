@@ -75,7 +75,7 @@ def load_device_availability_cache():
                 effective_time = 15
                 effective_time_unit = 'second'
         #这里group by vip和availability，以vip为key,拿到最终上报的关于该vip的总的探针个数，上报的状态，以及运营商
-        sql = 'select vip_address,availability,admin_isp,count(availability) from Polaris_tb_fact_detectdeviceavailability_info where create_time >= DATE_FORMAT(DATE_ADD(now(), INTERVAL - {} {}),"%y-%m-%d %H:%i") group by vip_address,availability'.format(effective_time,effective_time_unit)
+        sql = 'select vip_address,availability,admin_isp,count(availability) from Polaris_tb_fact_detectdeviceavailability_select_info where create_time >= DATE_FORMAT(DATE_ADD(now(), INTERVAL - {} {}),"%y-%m-%d %H:%i:%s") group by vip_address,availability'.format(effective_time,effective_time_unit)
         res = my_custom_sql(sql)
         vip_avil_dict = {}
         for item in res:

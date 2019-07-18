@@ -52,7 +52,7 @@ def load_confignameid_from_table():
     objs = tb_fact_nameid_info.objects.all()
     current_nameid_dict = {}
     for obj in objs:
-        if obj.nameid_name is not None and obj.nameid_policy is not None and obj.nameid_status == 'enable':
+        if obj.nameid_name is not None and obj.nameid_policy is not None:
             try:
                 #这个是获取所有view信息的，会以view的id为key,view的元信息为value.是从dimension_view表中取得的信息
                 url = "{}{}".format("http://127.0.0.1:8000/nameidview/get_info_by_nameid/?nameid=",obj.id)
@@ -113,7 +113,7 @@ def load_nameid_policy():
             imp_module = obj.nameid_policy
             dnszone = str(obj.zone_type.zone_name)
             if not obj.nameid_name.endswith(dnszone):
-                logger.info("the nameid {} is  not legal...".format(nameid))
+                logger.info("the nameid {} is  not legal...".format(obj.nameid_name))
                 continue
             try:
                 ip_module = importlib.import_module('Polaris.policy.{}'.format(imp_module))
